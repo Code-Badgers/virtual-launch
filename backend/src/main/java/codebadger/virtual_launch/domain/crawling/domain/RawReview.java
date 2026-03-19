@@ -1,5 +1,11 @@
 package codebadger.virtual_launch.domain.crawling.domain;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,11 +14,17 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
+@Entity
+@Table(name = "raw_review")
 public class RawReview { // 실제 리뷰 - 개별
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long rawReviewId;
+
     private String platform; // 리뷰 출처 (네이버, 다나와 등)
     private String originalContent; // 원본 리뷰 내용
     private int starRating; // 별점 (1~5)
