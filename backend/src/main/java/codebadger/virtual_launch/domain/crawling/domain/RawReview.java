@@ -1,5 +1,16 @@
 package codebadger.virtual_launch.domain.crawling.domain;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class RawReview { // 실제 리뷰 - 개별
     private Long rawReviewId;
     private String platform; // 리뷰 출처 (네이버, 다나와 등)
