@@ -1,13 +1,14 @@
 package codebadger.virtual_launch.domain.crawling.infrastructure;
 
+import codebadger.virtual_launch.common.exception.BusinessException;
+import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.crawling.domain.CrawlingResultDto;
-import codebadger.virtual_launch.domain.crawling.domain.RawReview;
+import codebadger.virtual_launch.domain.crawling.domain.entity.RawReview;
 import codebadger.virtual_launch.domain.crawling.domain.ReviewCrawler;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,6 +23,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class DanawaCrawler implements ReviewCrawler {
 
@@ -143,15 +145,16 @@ public class DanawaCrawler implements ReviewCrawler {
                                     .build());
                         }
                     } else {
-                        System.out.println(star + "점 리뷰는 존재하지 않습니다.");
+                        log.info("{}점 리뷰가 존재하지 않음", star);
                     }
 
                 } catch (Exception e) {
-                    System.out.println(star + "점 필터 조작 실패: " + e.getMessage());
+                    log.warn("{}점 필터 조작 실패: {}", star, e.getMessage());
                 }
             }
         } catch (Exception e) {
-            System.err.println("크롤링 중 오류 발생: " + e.getMessage());
+            log.error("크롤링 중 오류 발생: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.CRAWLING_FAILED);
         } finally {
             driver.quit();
         }

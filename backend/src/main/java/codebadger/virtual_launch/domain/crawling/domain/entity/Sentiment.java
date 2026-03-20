@@ -1,4 +1,4 @@
-package codebadger.virtual_launch.domain.crawling.domain;
+package codebadger.virtual_launch.domain.crawling.domain.entity;
 
 public enum Sentiment {
     POSITIVE, // 긍정

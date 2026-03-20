@@ -1,0 +1,18 @@
+version: '3.8'
+# 터미널에 다음 명령어 입력docker-compose up -d
+services:
+  db:
+    image: postgres:17
+    container_name: virtual-launch-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4753
+      POSTGRES_DB: virtual_launch_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:
