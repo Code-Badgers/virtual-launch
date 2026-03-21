@@ -35,11 +35,12 @@ public class SecurityConfig {
                 // 4. 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // 회원가입, 로그인은 인증 없이 허용
-                        .anyRequest().authenticated()               // 나머지는 모두 인증 필요
-                )
+                        // .anyRequest().authenticated()               // 나머지는 모두 인증 필요
+                        .anyRequest().permitAll()
+                );
 
                 // 5. JWT 필터 등록: UsernamePasswordAuthenticationFilter 이전에 실행되어야 함
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                // .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

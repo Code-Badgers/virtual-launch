@@ -1,0 +1,42 @@
+package codebadger.virtual_launch.domain.crawling.domain.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
+@Entity
+@Table(name = "raw_review")
+public class RawReview { // 실제 리뷰 - 개별
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long rawReviewId;
+
+    private String platform; // 리뷰 출처 (네이버, 다나와 등)
+
+    @Column(columnDefinition = "TEXT")
+    private String originalContent; // 원본 리뷰 내용
+    private int starRating; // 별점 (1~5)
+
+    private Sentiment sentiment; // 긍정, 부정 스코어 점수
+
+    @Column(columnDefinition = "TEXT")
+    private String reviewTags; // 리뷰에서 추출된 키워드 (콤마로 구분)
+
+    @Column(columnDefinition = "TEXT")
+    private String painPoints; // 핵심 불만 사항
+}

@@ -16,7 +16,10 @@ public enum ErrorCode {
     EMAIL_DUPLICATION(HttpStatus.BAD_REQUEST, "M002", "이미 사용 중인 이메일입니다."),
 
     // 잔액
-    LACK_OF_BALANCE(HttpStatus.BAD_REQUEST, "W001", "지갑 잔액이 부족합니다.");
+    LACK_OF_BALANCE(HttpStatus.BAD_REQUEST, "W001", "지갑 잔액이 부족합니다."),
+
+    // 리뷰 크롤링
+    CRAWLING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CR001", "리뷰 크롤링에 실패했습니다.");
 
     private final HttpStatus status;
     private final String code; // 필요 시 title 외에 별도 관리용
