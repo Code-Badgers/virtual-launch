@@ -19,7 +19,10 @@ public enum ErrorCode {
     LACK_OF_BALANCE(HttpStatus.BAD_REQUEST, "W001", "지갑 잔액이 부족합니다."),
 
     // 리뷰 크롤링
-    CRAWLING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CR001", "리뷰 크롤링에 실패했습니다.");
+    CRAWLING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CR001", "리뷰 크롤링에 실패했습니다."),
+
+    // 카테고리
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 카테고리입니다.");
 
     private final HttpStatus status;
     private final String code; // 필요 시 title 외에 별도 관리용
