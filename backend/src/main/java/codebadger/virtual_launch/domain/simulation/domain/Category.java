@@ -1,5 +1,6 @@
 package codebadger.virtual_launch.domain.simulation.domain;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,6 +31,7 @@ public class Category {
     private Long categoryId;
 
     @Column(unique = true, nullable = false)
+    @Schema(description = "카테고리 대분류명", example = "노트북")
     private String categoryName; // 카테고리 대분류명
 
     @JdbcTypeCode(SqlTypes.JSON)

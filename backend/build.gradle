@@ -63,6 +63,9 @@ dependencies {
 
     // 정적 HTML 파싱 및 데이터 추출용 라이브러리 (Jsoup)
     implementation 'org.jsoup:jsoup:1.17.2'
+
+    // Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 }
 
 dependencyManagement {
