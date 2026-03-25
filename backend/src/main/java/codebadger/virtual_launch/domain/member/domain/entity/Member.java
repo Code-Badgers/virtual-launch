@@ -2,6 +2,7 @@ package codebadger.virtual_launch.domain.member.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -28,4 +29,20 @@ public class Member {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Builder
+    private Member(String email, String password, MemberRole role) {
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public static Member create(String email, String password, MemberRole role) {
+        return Member.builder()
+                .email(email)
+                .password(password)
+                .role(role)
+                .build();
+    }
 }
