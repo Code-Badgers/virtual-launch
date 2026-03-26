@@ -7,6 +7,7 @@ import jakarta.persistence.MappedSuperclass;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Getter
@@ -19,7 +20,7 @@ public abstract class BaseTimeEntity {
     @Schema(description = "생성 일시", example = "2024-06-01T12:00:00")
     private OffsetDateTime createdAt;
 
-    @CreatedDate
+    @LastModifiedDate
     @Column(nullable = false)
     @Schema(description = "수정 일시", example = "2024-06-01T12:30:00")
     private OffsetDateTime updatedAt;

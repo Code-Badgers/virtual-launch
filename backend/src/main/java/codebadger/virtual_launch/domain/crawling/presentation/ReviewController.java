@@ -33,9 +33,7 @@ public class ReviewController {
                 .map(ReviewCrawlingResponse.ReviewDetail::from)
                 .collect(Collectors.toList());
 
-        ReviewCrawlingResponse response = new ReviewCrawlingResponse(
-                details
-        );
+        ReviewCrawlingResponse response = new ReviewCrawlingResponse(details);
 
         return SuccessResponse.ok(response, "경쟁사 리뷰 크롤링 및 저장이 완료되었습니다");
     }
