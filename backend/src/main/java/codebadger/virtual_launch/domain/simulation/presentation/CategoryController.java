@@ -2,7 +2,7 @@ package codebadger.virtual_launch.domain.simulation.presentation;
 
 import codebadger.virtual_launch.common.api.SuccessResponse;
 import codebadger.virtual_launch.domain.simulation.application.CategoryService;
-import codebadger.virtual_launch.domain.simulation.domain.RequiredSpec;
+import codebadger.virtual_launch.domain.simulation.domain.entity.RequiredSpec;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 public class CategoryController {
 

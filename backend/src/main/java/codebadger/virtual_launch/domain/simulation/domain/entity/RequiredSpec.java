@@ -1,4 +1,4 @@
-package codebadger.virtual_launch.domain.simulation.domain;
+package codebadger.virtual_launch.domain.simulation.domain.entity;
 
 import java.util.List;
 

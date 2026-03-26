@@ -1,5 +1,6 @@
-package codebadger.virtual_launch.domain.simulation.domain;
+package codebadger.virtual_launch.domain.simulation.domain.repository;
 
+import codebadger.virtual_launch.domain.simulation.domain.entity.Category;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
