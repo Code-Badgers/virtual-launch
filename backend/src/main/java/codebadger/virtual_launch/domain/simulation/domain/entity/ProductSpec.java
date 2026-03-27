@@ -19,12 +19,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
@@ -36,13 +34,13 @@ public class ProductSpec extends BaseTimeEntity { // 가상 런칭 제품 스펙
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productId;
 
-    // 외래 키 - 하나의 카테고리는 여러 제품 스펙을 가질 수 있다 (1:N)
+    // 외래 키 - 여러 제품 스펙은 하나의 카테고리를 가질 수 있다 (N:1)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     @Schema(description = "선택한 카테고리")
     private Category category;
 
-    // 외래 키 - 한 명의 회원은 여러 제품 제품 스펙을 가질 수 있다 (1:N)
+    // 외래 키 - 여러 제품 스펙은 한 명의 회원에 속한다 (N:1)
 
     @Column(nullable = false, length = 100)
     @Schema(description = "제품명")
@@ -67,4 +65,9 @@ public class ProductSpec extends BaseTimeEntity { // 가상 런칭 제품 스펙
 
     @Schema(description = "제품 상태")
     private ProductStatus productStatus;
+
+    // 제품 상태 업데이트 메서드
+    public void updateStatus(ProductStatus newStatus) {
+        this.productStatus = newStatus;
+    }
 }
