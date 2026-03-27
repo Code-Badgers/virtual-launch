@@ -38,6 +38,13 @@ public class Member {
         this.createdAt = LocalDateTime.now();
     }
 
+    @Builder(builderMethodName = "stubBuilder")
+    private Member(Long id, String email, MemberRole role) {
+        this.id = id;
+        this.email = email;
+        this.role = role;
+    }
+
     public static Member create(String email, String password, MemberRole role) {
         return Member.builder()
                 .email(email)
