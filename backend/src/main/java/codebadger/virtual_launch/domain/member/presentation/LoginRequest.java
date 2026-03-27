@@ -1,5 +1,7 @@
 package codebadger.virtual_launch.domain.member.presentation;
 
+import codebadger.virtual_launch.domain.member.application.LoginCommand;
+import codebadger.virtual_launch.domain.member.application.SignUpCommand;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -12,4 +14,8 @@ public record LoginRequest(
         @Size(min = 8, max = 20)
         @NotBlank
         String password) {
+
+    public LoginCommand toCommand() {
+        return new LoginCommand(email, password);
+    }
 }
