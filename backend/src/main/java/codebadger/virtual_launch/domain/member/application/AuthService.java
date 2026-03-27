@@ -1,4 +1,4 @@
-package codebadger.virtual_launch.domain.member.domain.application;
+package codebadger.virtual_launch.domain.member.application;
 
 import codebadger.virtual_launch.common.security.JwtTokenProvider;
 import codebadger.virtual_launch.domain.member.domain.entity.Member;

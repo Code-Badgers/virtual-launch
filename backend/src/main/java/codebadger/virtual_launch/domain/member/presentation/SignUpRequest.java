@@ -1,6 +1,6 @@
-package codebadger.virtual_launch.domain.member.domain.presentation;
+package codebadger.virtual_launch.domain.member.presentation;
 
-import codebadger.virtual_launch.domain.member.domain.application.SignUpCommand;
+import codebadger.virtual_launch.domain.member.application.SignUpCommand;
 import codebadger.virtual_launch.domain.member.domain.entity.MemberRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
