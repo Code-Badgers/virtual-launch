@@ -59,15 +59,12 @@ public class JwtTokenProvider {
         // 1. 토큰에서 필요한 정보들 추출
         Long memberId = Long.valueOf(claims.getSubject());
         String email = claims.get("email", String.class);
-        String roleWithPrefix = claims.get("auth", String.class); // "ROLE_USER" 형태
+        String role = claims.get("auth", String.class); // "ROLE_USER" 형태
 
-        // 2. Enum 변환을 위해 "ROLE_" 접두사 제거 (예: "ROLE_USER" -> "USER")
-        String role = roleWithPrefix.replace("ROLE_", "");
-
-        // 3. 재조립
+        // 2. 재조립
         CustomUserDetails userDetails = CustomUserDetails.fromValues(memberId, email, role);
 
-        // 4. 인증 토큰 생성 및 반환
+        // 3. 인증 토큰 생성 및 반환
         return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
     }
 
