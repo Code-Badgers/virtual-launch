@@ -38,7 +38,7 @@ public class Member {
         this.createdAt = LocalDateTime.now();
     }
 
-    @Builder(builderMethodName = "stubBuilder")
+    @Builder(builderClassName = "StubBuilder", builderMethodName = "stubBuilder")
     private Member(Long id, String email, MemberRole role) {
         this.id = id;
         this.email = email;
