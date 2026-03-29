@@ -5,6 +5,7 @@ import codebadger.virtual_launch.common.security.JwtTokenProvider;
 import codebadger.virtual_launch.domain.member.domain.entity.Member;
 import codebadger.virtual_launch.domain.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthenticationManager authenticationManager;
 
     @Transactional
     public Long signUp(SignUpCommand command) {
@@ -40,25 +42,15 @@ public class AuthService {
 
     @Transactional
     public String login(LoginCommand command) {
-        // 1. 회원 조회
-        Member member = memberRepository.findByEmail(command.email())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        // 1. 인증 전용 토큰 생성 (ID/PW만 담음)
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(command.email(), command.password());
 
-        // 2. 비밀번호 검증
-        if (!passwordEncoder.matches(command.password(), member.getPassword())) {
-            throw new IllegalArgumentException("아이디 혹은 비밀번호가 잘못되었습니다.");
-        }
+        // 2. 지휘자(AuthenticationManager)에게 인증 위임
+        // 여기서 내부적으로 CustomUserDetailsService.loadUserByUsername()이 호출
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-        // 3. CustomUserDetails 및 Authentication 객체 생성
-        CustomUserDetails userDetails = new CustomUserDetails(member);
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                userDetails,           // principal (신분증)
-                null,                  // credentials (인증 후라 비움)
-                userDetails.getAuthorities() // 권한 목록
-        );
-
-        // 4. 토큰 발급 및 반환
+        // 3. 인증이 완료된 authentication 객체로 JWT 생성
         return jwtTokenProvider.createAccessToken(authentication);
     }
 
