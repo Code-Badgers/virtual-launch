@@ -10,6 +10,7 @@ import codebadger.virtual_launch.domain.simulation.domain.entity.RequiredSpec;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CategoryRepository;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
 import codebadger.virtual_launch.domain.simulation.domain.repository.ProductSpecRepository;
+import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchResultDto;
 import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchScoreDto;
 import java.util.HashMap;
 import java.util.List;
@@ -104,7 +105,7 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
                 eachScore = targetValue.equals(compValue) ? 100.0 : 0.0; // 일치하면 100점 아닐 경우 0점 (AI를 통한 정교한 점수 로직 추후 구현 고려)
             }
 
-            double weight = weights.getOrDefault(key, 1.0); // 가중치 적용 (없을 경우 기본 1.0)
+            double weight = weights.getOrDefault(key, 0.1); // 가중치 적용 (없을 경우 기본 0.1)
 
             eachScores.put(key, eachScore); // 각 항목별 점수 저장
             weightedScoreSum += (eachScore * weight); // 총 점수 합산
@@ -118,5 +119,20 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
         return new MatchScoreDto(finalScore, eachScores);
     }
 
-    // 정렬 및 최종 선정
+    // 정렬 및 상위 3개의 제품 선정
+    @Transactional(readOnly = true)
+    public List<MatchResultDto> findTopMatches(ProductSpec productSpec) {
+        // 데이터 조회 및 평탄화
+        Map<String, String> targetMap = flatten(productSpec.getDetailedSpecs());
+        List<CompetitorProduct> competitors = competitorProductRepository.findByCategory(productSpec.getCategory());
+
+        return competitors.stream()
+                .map(comp -> {
+                    MatchScoreDto scoreDto = calculateIndividualScore(targetMap, flatten(comp.getDetailedSpecs())); // 각 경쟁사 제품과의 점수 계산
+                    return new MatchResultDto(comp, scoreDto); // 제품 정보와 점수 정보를 함께
+                })
+                .sorted((a,  b) -> Double.compare(b.score().totalScore(), a.score().totalScore()))
+                .limit(3) // 상위 3개 제품 선정
+                .collect(Collectors.toList());
+    }
 }
