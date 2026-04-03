@@ -27,7 +27,9 @@ public class ReviewController {
     @Operation(summary = "제품명에 따른 리뷰 크롤링", description = "제품명에 따른 리뷰 크롤링을 수행하고, 크롤링된 리뷰 데이터를 DB에 저장합니다")
     public SuccessResponse<ReviewCrawlingResponse> startCrawling(@RequestBody ReviewCrawlingRequest request) {
 
-        CrawlingResultDto resultDto = reviewCrawlingService.crawlAndSaveReviews(request.keyword());
+        // 비동기 처리로 인해 바로 결과를 반환할 수 없으므로, 크롤링이 완료된 후 DB에서 데이터를 조회하여 반환하는 방식으로 추후 변경 예정
+        // CrawlingResultDto resultDto = reviewCrawlingService.crawlAndSaveReviews(request.keyword());
+        CrawlingResultDto resultDto = null;
 
         List<ReviewDetail> details = resultDto.getReviews().stream()
                 .map(ReviewCrawlingResponse.ReviewDetail::from)

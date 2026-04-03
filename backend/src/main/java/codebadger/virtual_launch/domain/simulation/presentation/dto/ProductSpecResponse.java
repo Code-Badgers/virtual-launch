@@ -1,7 +1,6 @@
 package codebadger.virtual_launch.domain.simulation.presentation.dto;
 
 import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
-import codebadger.virtual_launch.domain.simulation.domain.entity.ProductStatus;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
@@ -13,7 +12,6 @@ public record ProductSpecResponse(
         String productImageUrl,
         OffsetDateTime plannedLaunchDate,
         BigDecimal plannedPrice,
-        ProductStatus productStatus,
         OffsetDateTime createdAt
 ) {
         public static ProductSpecResponse from(ProductSpec entity) {
@@ -25,7 +23,6 @@ public record ProductSpecResponse(
                     entity.getProductImageUrl(),
                     entity.getPlannedLaunchDate(),
                     entity.getPlannedPrice(),
-                    entity.getProductStatus(),
                     entity.getCreatedAt()
             );
         }

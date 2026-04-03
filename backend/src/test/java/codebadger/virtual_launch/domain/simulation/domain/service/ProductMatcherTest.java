@@ -98,7 +98,7 @@ class ProductMatcherTest {
         when(competitorProductRepository.findByCategory(any())).thenReturn(List.of(bestMatch, worstMatch));
 
         // When
-        List<MatchResultDto> result = productMatcher.findTopMatches(productSpec);
+        List<MatchResultDto> result = productMatcher.findTopMatches(productSpec, 5); // 최대 5개 제품과 비교하지만, 실제로는 2개 제품만 존재
 
         // Then
         assertNotNull(result);

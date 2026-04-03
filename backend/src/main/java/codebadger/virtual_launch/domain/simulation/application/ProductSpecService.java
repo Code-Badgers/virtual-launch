@@ -4,7 +4,6 @@ import codebadger.virtual_launch.common.exception.BusinessException;
 import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.simulation.domain.entity.Category;
 import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
-import codebadger.virtual_launch.domain.simulation.domain.entity.ProductStatus;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CategoryRepository;
 import codebadger.virtual_launch.domain.simulation.domain.repository.ProductSpecRepository;
 import codebadger.virtual_launch.domain.simulation.presentation.dto.ProductSpecResponse;
@@ -41,7 +40,6 @@ public class ProductSpecService {
                 .plannedLaunchDate(request.targetLaunchDate())
                 .plannedPrice(request.plannedPrice())
                 .detailedSpecs(request.detailedSpecs())
-                .productStatus(ProductStatus.PLANNING)
                 .build();
 
         // 가상 런칭 제품 스펙 저장

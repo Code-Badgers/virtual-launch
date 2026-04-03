@@ -62,12 +62,4 @@ public class ProductSpec extends BaseTimeEntity { // 가상 런칭 제품 스펙
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "required_specs", columnDefinition = "jsonb")
     private Map<String, Map<String, RequiredSpec>> detailedSpecs; // 제품 상세 스펙 (가변 데이터)
-
-    @Schema(description = "제품 상태")
-    private ProductStatus productStatus;
-
-    // 제품 상태 업데이트 메서드
-    public void updateStatus(ProductStatus newStatus) {
-        this.productStatus = newStatus;
-    }
 }

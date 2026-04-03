@@ -15,6 +15,7 @@ import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchScoreDt
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -102,7 +103,7 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
 
             double eachScore = 0.0;
             if(compValue != null) { // 값 비교 로직
-                eachScore = targetValue.equals(compValue) ? 100.0 : 0.0; // 일치하면 100점 아닐 경우 0점 (AI를 통한 정교한 점수 로직 추후 구현 고려)
+                eachScore = Objects.equals(targetValue, compValue) ? 100.0 : 0.0; // 일치하면 100점 아닐 경우 0점 (AI를 통한 정교한 점수 로직 추후 구현 고려)
             }
 
             double weight = weights.getOrDefault(key, 0.1); // 가중치 적용 (없을 경우 기본 0.1)
@@ -121,7 +122,7 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
 
     // 정렬 및 상위 3개의 제품 선정
     @Transactional(readOnly = true)
-    public List<MatchResultDto> findTopMatches(ProductSpec productSpec) {
+    public List<MatchResultDto> findTopMatches(ProductSpec productSpec, int limit) { // 사용자로부터 몇 개의 경쟁사 제품과 비교할 것인지 입력받음 (기본값 3)
         // 데이터 조회 및 평탄화
         Map<String, String> targetMap = flatten(productSpec.getDetailedSpecs());
         List<CompetitorProduct> competitors = competitorProductRepository.findByCategory(productSpec.getCategory());
