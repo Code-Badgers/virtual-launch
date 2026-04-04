@@ -1,5 +1,7 @@
 package codebadger.virtual_launch.domain.member.domain.entity;
 
+import codebadger.virtual_launch.common.exception.BusinessException;
+import codebadger.virtual_launch.common.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -72,9 +74,9 @@ public class CreditWallet {
         if (amount != null && amount <= balance && amount > 0 )  {
             balance -= amount;
         } else if (amount == null || amount < 0){
-            throw new IllegalArgumentException("유효하지 않은 금액입니다..");
+            throw new BusinessException(ErrorCode.INVALID_CREDIT_VALUE);
         } else if (amount > balance) {
-            throw new IllegalArgumentException("잔액이 부족합니다.");
+            throw new BusinessException(ErrorCode.LACK_OF_BALANCE);
         }
 
     }
