@@ -1,7 +1,5 @@
 package codebadger.virtual_launch.domain.simulation.domain.service;
 
-import codebadger.virtual_launch.common.exception.BusinessException;
-import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.crawling.application.ReviewCrawlingService;
 import codebadger.virtual_launch.domain.simulation.domain.entity.MatchedCompetitor;
 import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
@@ -47,8 +45,7 @@ public class SimulationTaskExecutor {
             project.updateStatus(SimulationStatus.COMPLETED);
         } catch (Exception e) {
             project.updateStatus(SimulationStatus.FAILED);
-
-            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+            log.error("시뮬레이션 분석 중 오류 발생 : {}", e.getMessage());
         }
 
     }

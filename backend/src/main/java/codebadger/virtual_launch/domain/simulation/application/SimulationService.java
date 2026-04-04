@@ -12,6 +12,8 @@ import codebadger.virtual_launch.domain.simulation.presentation.dto.SimulationRe
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @Transactional
@@ -37,9 +39,15 @@ public class SimulationService {
                 .build();
 
         SimulationProject savedProject = simulationProjectRepository.save(project);
+        Long projectId = savedProject.getProjectId();
 
         // 비동기 작업 트리거 - 시뮬레이션 분석 시작 (크롤링 + 매칭)
-        simulationTaskExecutor.runAsyncAnalysis(savedProject.getProjectId(), productSpec, dto.competitorCount());
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                simulationTaskExecutor.runAsyncAnalysis(projectId, productSpec, dto.competitorCount());
+            }
+        });
 
         return savedProject.getProjectId();
     }
