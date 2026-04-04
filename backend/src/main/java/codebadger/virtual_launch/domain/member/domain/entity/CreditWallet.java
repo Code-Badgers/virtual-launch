@@ -65,4 +65,17 @@ public class CreditWallet {
         // 2. 내부 생성자를 호출하여 객체 생성 (이때 memberId는 null로 고정)
         return new CreditWallet(null, companyId, 0L);
     }
+
+    // 잔액에서 금액 차감
+    public void deduct(Long amount) {
+
+        if (amount != null && amount <= balance && amount > 0 )  {
+            balance -= amount;
+        } else if (amount == null || amount < 0){
+            throw new IllegalArgumentException("유효하지 않은 금액입니다..");
+        } else if (amount > balance) {
+            throw new IllegalArgumentException("잔액이 부족합니다.");
+        }
+
+    }
 }
