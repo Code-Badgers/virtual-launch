@@ -15,12 +15,16 @@ public class CreditService {
 
     private final CreditWalletRepository creditWalletRepository;
 
-    public void deductCredit(Long ownerId, CreditOwnerType ownerType, Long amount) {
+    @Transactional
+    public Long deductCredit(Long ownerId, CreditOwnerType ownerType, Long amount) {
         // 1. 도메인 서비스나 레포지토리를 통해 주체에 맞는 지갑 조회
         CreditWallet wallet = findWalletOrThrow(ownerId, ownerType);
 
         // 2. 비즈니스 로직 수행 (엔티티 내부 메서드 호출)
         wallet.deduct(amount);
+
+        // 3. 변동된 잔액을 반환
+        return wallet.getBalance();
     }
 
     private CreditWallet findWalletOrThrow(Long id, CreditOwnerType type) {
