@@ -3,6 +3,7 @@ package codebadger.virtual_launch.domain.simulation.domain.service;
 import static codebadger.virtual_launch.common.exception.ErrorCode.PRODUCT_NOT_FOUND;
 
 import codebadger.virtual_launch.common.exception.BusinessException;
+import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.simulation.domain.entity.Category;
 import codebadger.virtual_launch.domain.simulation.domain.entity.CompetitorProduct;
 import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
@@ -85,6 +86,12 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
     public Map<String, Double> getWeights() {
         Map<String, Double> weights = new HashMap<>();
         weights.put("가격", 0.3); // 가격에 30% 가중치
+
+        // 가중치의 총합은 1.0이여야 한다
+        double totalWeight = weights.values().stream().mapToDouble(Double::doubleValue).sum();
+        if(Math.abs(totalWeight - 1.0) > 0.0001) { // 오차 범위 0.0001 허용
+            throw new BusinessException(ErrorCode.INVALID_WEIGHT_SUM);
+        }
         return weights;
     }
 
