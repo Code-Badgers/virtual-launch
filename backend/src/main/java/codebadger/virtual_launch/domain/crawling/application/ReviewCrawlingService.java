@@ -7,6 +7,7 @@ import codebadger.virtual_launch.domain.crawling.infrastructure.DanawaCrawler;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,8 +19,9 @@ public class ReviewCrawlingService {
     private final DanawaCrawler danawaCrawler;
     private final RawReviewRepository rawReviewRepository;
 
+    @Async
     @Transactional
-    public CrawlingResultDto crawlAndSaveReviews(String keyword) {
+    public void crawlAndSaveReviews(String keyword) {
         // 크롤링 수행
         CrawlingResultDto crawlingResult = danawaCrawler.crawlReviews(keyword);
         List<RawReview> reviews = crawlingResult.getReviews();
@@ -27,7 +29,7 @@ public class ReviewCrawlingService {
         // 수집된 리뷰에 카테고리 연결하기
 
         // 크롤링 결과 저장
-        rawReviewRepository.saveAll(reviews);
-        return crawlingResult;
+//        rawReviewRepository.saveAll(reviews);
+//        return crawlingResult;
     }
 }

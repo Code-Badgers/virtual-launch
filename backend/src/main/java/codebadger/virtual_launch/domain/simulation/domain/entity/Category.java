@@ -17,12 +17,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
@@ -45,4 +43,8 @@ public class Category {
     // 하나의 카테고리는 여러 제품 스펙을 가질 수 있다 (1:N)
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<ProductSpec> productSpecs = new ArrayList<>();
+
+    // 하나의 카테고리는 여러 경쟁사 제품 스펙을 가질 수 있다 (1:N)
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    private List<CompetitorProduct> competitorProducts = new ArrayList<>();
 }
