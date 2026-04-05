@@ -2,13 +2,9 @@ package codebadger.virtual_launch.domain.crawling.presentation;
 
 import codebadger.virtual_launch.common.api.SuccessResponse;
 import codebadger.virtual_launch.domain.crawling.application.ReviewCrawlingService;
-import codebadger.virtual_launch.domain.crawling.domain.CrawlingResultDto;
 import codebadger.virtual_launch.domain.crawling.presentation.dto.ReviewCrawlingRequest;
 import codebadger.virtual_launch.domain.crawling.presentation.dto.ReviewCrawlingResponse;
-import codebadger.virtual_launch.domain.crawling.presentation.dto.ReviewCrawlingResponse.ReviewDetail;
 import io.swagger.v3.oas.annotations.Operation;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,14 +25,19 @@ public class ReviewController {
 
         // 비동기 처리로 인해 바로 결과를 반환할 수 없으므로, 크롤링이 완료된 후 DB에서 데이터를 조회하여 반환하는 방식으로 추후 변경 예정
         // CrawlingResultDto resultDto = reviewCrawlingService.crawlAndSaveReviews(request.keyword());
-        CrawlingResultDto resultDto = null;
 
-        List<ReviewDetail> details = resultDto.getReviews().stream()
-                .map(ReviewCrawlingResponse.ReviewDetail::from)
-                .collect(Collectors.toList());
+        // 크롤링 작업만 비동기로 트리거 (반환값을 기다리지 않음)
+        reviewCrawlingService.crawlAndSaveReviews(request.keyword());
 
-        ReviewCrawlingResponse response = new ReviewCrawlingResponse(details);
+//        List<ReviewDetail> details = resultDto.getReviews().stream()
+//                .map(ReviewCrawlingResponse.ReviewDetail::from)
+//                .collect(Collectors.toList());
 
-        return SuccessResponse.ok(response, "경쟁사 리뷰 크롤링 및 저장이 완료되었습니다");
+        ReviewCrawlingResponse response = new ReviewCrawlingResponse(
+                null,
+                "PROCESSING"
+        );
+
+        return SuccessResponse.ok(response, "리뷰 크롤링이 시작되었습니다.\n 완료 후 결과를 확인해주세요.");
     }
 }
