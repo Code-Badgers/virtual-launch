@@ -60,7 +60,6 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
                 String finalValue = (spec.selectedOption() != null)
                         ? spec.selectedOption()
                         : spec.value();
-                flatSpecMap.put(specName, finalValue);
 
                 // 값이 존재할 경우에만 평탄화된 맵에 추가
                 if(finalValue != null) {

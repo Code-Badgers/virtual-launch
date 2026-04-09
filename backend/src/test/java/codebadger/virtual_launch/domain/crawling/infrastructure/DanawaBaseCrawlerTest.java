@@ -7,11 +7,11 @@ import codebadger.virtual_launch.domain.crawling.domain.entity.RawReview;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class DanawaCrawlerTest {
+class DanawaBaseCrawlerTest {
 
     @Test
     void crawlReviews() {
-        DanawaCrawler crawler = new DanawaCrawler();
+        DanawaBaseCrawler crawler = new DanawaBaseCrawler();
         CrawlingResultDto result = crawler.crawlReviews("위닉스 제습기");
 
         // id=productOpinionTabCount 를 통해 추출된 실제 전체 리뷰 개수 확인
@@ -38,7 +38,7 @@ class DanawaCrawlerTest {
 
     @Test
     void supports() {
-        DanawaCrawler crawler = new DanawaCrawler();
+        DanawaBaseCrawler crawler = new DanawaBaseCrawler();
         assertTrue(crawler.supports("danawa"));
     }
 }
