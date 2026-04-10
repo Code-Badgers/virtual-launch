@@ -18,6 +18,7 @@ public enum ErrorCode {
     // 지갑
     LACK_OF_BALANCE(HttpStatus.BAD_REQUEST, "W001", "지갑 잔액이 부족합니다."),
     INVALID_CREDIT_VALUE(HttpStatus.BAD_REQUEST, "W002", "유효하지 않은 금액입니다."),
+    CONCURRENCY_ERROR(HttpStatus.CONFLICT,"WOO3", "이미 수정된 데이터입니다. 다시 시도해 주세요." ),
 
     // 리뷰 크롤링
     CRAWLING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CR001", "리뷰 크롤링에 실패했습니다."),
