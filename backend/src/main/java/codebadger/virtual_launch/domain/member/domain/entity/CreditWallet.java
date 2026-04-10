@@ -43,12 +43,20 @@ public class CreditWallet {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // CreditWallet.java 내부 수정
+
     @Builder
     private CreditWallet(Long memberId, Long companyId, Long balance) {
         this.memberId = memberId;
         this.companyId = companyId;
-        this.balance = balance;
-        this.updatedAt = LocalDateTime.now();
+        this.balance = (balance != null) ? balance : 0L; // null 방어 로직 추가
+        // this.updatedAt = LocalDateTime.now(); // 제거: @LastModifiedDate가 처리함
+    }
+
+    // 테스트 편의를 위해 잔액을 지정할 수 있는 정적 팩토리 메서드 추가
+    public static CreditWallet createMemberWalletWithBalance(Long memberId, Long balance) {
+        if (memberId == null) throw new IllegalArgumentException("회원 ID는 필수입니다.");
+        return new CreditWallet(memberId, null, balance);
     }
 
     // 개인용 지갑 생성
