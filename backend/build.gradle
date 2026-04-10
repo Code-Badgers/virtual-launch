@@ -69,6 +69,7 @@ dependencies {
 
 	// Spring Retry: 재시도 로직 라이브러리
 	implementation 'org.springframework.retry:spring-retry'
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
 }
 
 dependencyManagement {
