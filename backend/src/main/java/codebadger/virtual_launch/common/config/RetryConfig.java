@@ -1,10 +1,10 @@
 package codebadger.virtual_launch.common.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.resilience.annotation.Retryable;
+import org.springframework.core.Ordered;
+import org.springframework.retry.annotation.EnableRetry;
 
 @Configuration
-@Retryable
+@EnableRetry(order = Ordered.LOWEST_PRECEDENCE - 1)
 public class RetryConfig {
-
 }
