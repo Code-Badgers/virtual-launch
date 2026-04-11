@@ -25,7 +25,7 @@ public class CreditService {
     @Retryable(
             retryFor = {ObjectOptimisticLockingFailureException.class}, // 낙관적 락 예외 시 재시도
             maxAttempts = 3, // 최대 3번 시도 (처음 1번 + 재시도 2번)
-            backoff = @Backoff(delay = 100) // 0.1초 간격으로 재시도
+            backoff = @Backoff(delay = 50, multiplier = 2, random = true) // 0.1초 간격으로 재시도
     )
     @Transactional
     public Long deductCredit(Long ownerId, CreditOwnerType ownerType, Long amount) {
