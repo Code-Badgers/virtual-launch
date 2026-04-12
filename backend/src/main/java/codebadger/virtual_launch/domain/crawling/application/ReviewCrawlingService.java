@@ -1,9 +1,9 @@
 package codebadger.virtual_launch.domain.crawling.application;
 
-import codebadger.virtual_launch.domain.crawling.domain.CrawlingResultDto;
+import codebadger.virtual_launch.domain.crawling.domain.ReviewsCrawlingResultDto;
 import codebadger.virtual_launch.domain.crawling.domain.entity.RawReview;
 import codebadger.virtual_launch.domain.crawling.domain.repository.RawReviewRepository;
-import codebadger.virtual_launch.domain.crawling.infrastructure.DanawaBaseCrawler;
+import codebadger.virtual_launch.domain.crawling.infrastructure.DanawaReviewCrawler;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,14 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ReviewCrawlingService {
 
-    private final DanawaBaseCrawler danawaBaseCrawler;
+    private final DanawaReviewCrawler danawaReviewCrawler;
     private final RawReviewRepository rawReviewRepository;
 
     @Async
     @Transactional
     public void crawlReviews(String keyword) {
         // 크롤링 수행
-        CrawlingResultDto crawlingResult = danawaBaseCrawler.crawlReviews(keyword);
+        ReviewsCrawlingResultDto crawlingResult = danawaReviewCrawler.crawlReviews(keyword);
         List<RawReview> reviews = crawlingResult.getReviews();
 
         // 수집된 리뷰에 카테고리 연결하기

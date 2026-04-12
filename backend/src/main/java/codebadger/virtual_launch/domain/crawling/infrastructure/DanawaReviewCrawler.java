@@ -2,7 +2,8 @@ package codebadger.virtual_launch.domain.crawling.infrastructure;
 
 import codebadger.virtual_launch.common.exception.BusinessException;
 import codebadger.virtual_launch.common.exception.ErrorCode;
-import codebadger.virtual_launch.domain.crawling.domain.CrawlingResultDto;
+import codebadger.virtual_launch.domain.crawling.domain.ReviewCrawler;
+import codebadger.virtual_launch.domain.crawling.domain.ReviewsCrawlingResultDto;
 import codebadger.virtual_launch.domain.crawling.domain.entity.RawReview;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class DanawaReviewCrawler extends DanawaBaseCrawler {
+public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCrawler {
 
     private final WebDriverFactory webDriverFactory;
 
@@ -31,7 +32,7 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler {
     }
 
     @Override
-    public CrawlingResultDto crawlReviews(String keyword) {
+    public ReviewsCrawlingResultDto crawlReviews(String keyword) {
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
@@ -50,14 +51,14 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler {
             List<RawReview> reviewList = collectReviewsByStar(driver, js);
 
             // 전체 개수와 수집된 리뷰 리스트를 "CrawlingResultDto"라는 상자에 함께 담아서 반환
-            return CrawlingResultDto.builder()
+            return ReviewsCrawlingResultDto.builder()
                     .totalReviewCount(totalReviewCount)
                     .reviews(reviewList)
                     .build();
 
         } catch (Exception e) {
             log.error("크롤링 중 오류 발생: {}", e.getMessage());
-            throw new BusinessException(ErrorCode.CRAWLING_FAILED);
+            throw new BusinessException(ErrorCode.REVIEW_CRAWLING_FAILED);
         } finally {
             driver.quit();
         }
@@ -160,4 +161,8 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler {
         return localReviewList;
     }
 
+    @Override
+    public boolean supports (String platform){
+        return "danawa".equalsIgnoreCase(platform);
+    }
 }

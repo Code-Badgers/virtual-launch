@@ -1,6 +1,5 @@
 package codebadger.virtual_launch.domain.crawling.infrastructure;
 
-import codebadger.virtual_launch.domain.crawling.domain.ReviewCrawler;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -9,7 +8,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 @Slf4j
-public abstract class DanawaBaseCrawler implements ReviewCrawler {
+public abstract class DanawaBaseCrawler {
 
     protected void navigateToProductDetail (WebDriver driver, String keyword){
         // 사용자가 입력한 키워드를 기반으로 검색 결과 url 동적 생성
@@ -32,10 +31,5 @@ public abstract class DanawaBaseCrawler implements ReviewCrawler {
                 break;
             }
         }
-    }
-
-    @Override
-    public boolean supports (String platform){
-        return "danawa".equalsIgnoreCase(platform);
     }
 }

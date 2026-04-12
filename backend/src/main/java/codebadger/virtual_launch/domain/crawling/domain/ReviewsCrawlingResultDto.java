@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class CrawlingResultDto {
+public class ReviewsCrawlingResultDto {
     private int totalReviewCount;
     private List<RawReview> reviews;
 }

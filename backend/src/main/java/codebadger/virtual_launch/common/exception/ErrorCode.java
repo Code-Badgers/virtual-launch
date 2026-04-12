@@ -20,8 +20,9 @@ public enum ErrorCode {
     INVALID_CREDIT_VALUE(HttpStatus.BAD_REQUEST, "W002", "유효하지 않은 금액입니다."),
     CONCURRENCY_ERROR(HttpStatus.CONFLICT,"WOO3", "이미 수정된 데이터입니다. 다시 시도해 주세요." ),
 
-    // 리뷰 크롤링
-    CRAWLING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CR001", "리뷰 크롤링에 실패했습니다."),
+    // 크롤링
+    REVIEW_CRAWLING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CR001", "리뷰 크롤링에 실패했습니다."),
+    SPEC_CRAWLING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CR002", "경쟁사 상세 스펙 크롤링에 실패했습니다."),
 
     // 카테고리
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 카테고리입니다."),
