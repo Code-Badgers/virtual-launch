@@ -4,11 +4,11 @@ import codebadger.virtual_launch.common.exception.BusinessException;
 import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.crawling.domain.SpecCrawlingResultDto;
 import codebadger.virtual_launch.domain.crawling.infrastructure.DanawaSpecCrawler;
-import codebadger.virtual_launch.domain.simulation.domain.entity.Category;
 import codebadger.virtual_launch.domain.simulation.domain.entity.CompetitorProduct;
+import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
 import codebadger.virtual_launch.domain.simulation.domain.entity.RequiredSpec;
-import codebadger.virtual_launch.domain.simulation.domain.repository.CategoryRepository;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
+import codebadger.virtual_launch.domain.simulation.domain.repository.ProductSpecRepository;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,33 +25,39 @@ public class CompetitorCrawlingService {
 
     private final DanawaSpecCrawler danawaSpecCrawler;
     private final CompetitorProductRepository competitorProductRepository;
-    private final CategoryRepository categoryRepository;
+    private final ProductSpecRepository productSpecRepository;
 
     @Async
     @Transactional
-    public void crawlSpecs(String keyword, Long categoryId) { // 비동기 경쟁사 제품 스펙 크롤링
+    public void crawlSpecs(String keyword, Long productId) { // 비동기 경쟁사 제품 스펙 크롤링
 
         try {
+            // 사용자 런칭 예정 제품으로부터 카테고리 조회 (필수 입력 스펙 확인용)
+            ProductSpec productSpec = productSpecRepository.findById(productId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+            Long categoryId = productSpec.getCategory().getCategoryId();
+
             // 크롤링 수행
             SpecCrawlingResultDto dto = danawaSpecCrawler.crawlSpecs(keyword);
 
-            // 카테고리 조회 (필수 입력 스펙 확인용)
-            Category category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-
             // rawSpec 가공 로직
             Map<String, Map<String, RequiredSpec>> detailedSpecs =
-                    processRawSpecs(category.getRequiredSpecs(), dto.getRawSpecs());
+                    processRawSpecs(productSpec.getCategory().getRequiredSpecs(), dto.getRawSpecs());
 
             CompetitorProduct competitorProduct = CompetitorProduct.builder()
+                    .category(productSpec.getCategory())
                     .modelName(dto.getModelName())
                     .currentPrice(dto.getCurrentPrice())
                     .detailedSpecs(detailedSpecs)
                     .lastCrawledAt(OffsetDateTime.now())
                     .build();
 
+            competitorProductRepository.save(competitorProduct);
+
         } catch (Exception e) {
             log.error("경쟁사 제품 스펙 크롤링 중 오류 발생: {}", e.getMessage());
+            throw new RuntimeException("크롤링 비동기 트랜잭션 롤백 처리", e);
         }
     }
 
