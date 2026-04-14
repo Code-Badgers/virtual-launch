@@ -29,7 +29,10 @@ public enum ErrorCode {
 
     // 런칭 예정 제품 상세 스펙
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "S002", "존재하지 않는 제품입니다."),
-    INVALID_WEIGHT_SUM(HttpStatus.BAD_REQUEST, "S003", "가중치의 합은 1.0이어야 합니다.");
+    INVALID_WEIGHT_SUM(HttpStatus.BAD_REQUEST, "S003", "가중치의 합은 1.0이어야 합니다."),
+
+    // 경쟁사 제품
+    COMPETITOR_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "S004", "존재하지 않는 경쟁사 제품입니다.");
 
     private final HttpStatus status;
     private final String code; // 필요 시 title 외에 별도 관리용

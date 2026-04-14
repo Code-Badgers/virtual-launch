@@ -1,5 +1,6 @@
 package codebadger.virtual_launch.domain.crawling.presentation.dto;
 
 public record ReviewCrawlingRequest (
-        String keyword
+        String keyword,
+        Long competitorProductId
 ) {}
