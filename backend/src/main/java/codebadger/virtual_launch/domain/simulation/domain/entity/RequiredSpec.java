@@ -1,8 +1,9 @@
 package codebadger.virtual_launch.domain.simulation.domain.entity;
 
 import java.util.List;
+import lombok.Builder;
 
-
+@Builder
 public record RequiredSpec(
         String label, // 예: "CPU", "RAM", "Storage"
         String type, // 예: "text", "number", "select"
