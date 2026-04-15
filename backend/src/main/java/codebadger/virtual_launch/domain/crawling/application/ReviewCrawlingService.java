@@ -41,7 +41,10 @@ public class ReviewCrawlingService {
                 return;
             }
 
-            // 수집된 리뷰에 카테고리 연결하기
+            // 연관관계 매핑
+            for(RawReview rawReview : reviews) {
+                rawReview.setCompetitorProduct(competitorProduct);
+            }
 
             // 크롤링 결과 저장
             rawReviewRepository.saveAll(reviews);

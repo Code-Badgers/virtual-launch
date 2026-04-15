@@ -3,15 +3,15 @@ package codebadger.virtual_launch.domain.crawling.presentation;
 import codebadger.virtual_launch.common.api.SuccessResponse;
 import codebadger.virtual_launch.domain.crawling.application.CompetitorCrawlingService;
 import codebadger.virtual_launch.domain.crawling.application.ReviewCrawlingService;
+import codebadger.virtual_launch.domain.crawling.domain.entity.RawReview;
+import codebadger.virtual_launch.domain.crawling.domain.repository.RawReviewRepository;
 import codebadger.virtual_launch.domain.crawling.presentation.dto.CompetitorCrawlingRequest;
 import codebadger.virtual_launch.domain.crawling.presentation.dto.CompetitorCrawlingResponse;
 import codebadger.virtual_launch.domain.crawling.presentation.dto.ReviewCrawlingRequest;
 import codebadger.virtual_launch.domain.crawling.presentation.dto.ReviewCrawlingResponse;
-import codebadger.virtual_launch.domain.crawling.presentation.dto.ReviewCrawlingResponse.ReviewDetail;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +27,7 @@ public class CrawlingController {
 
     private final ReviewCrawlingService reviewCrawlingService;
     private final CompetitorCrawlingService competitorCrawlingService;
+    private final RawReviewRepository rawReviewRepository;
 
     // 특정 키워드로 리뷰 크롤링을 명령하고 db저장
     @PostMapping("/reviews")
@@ -49,7 +50,18 @@ public class CrawlingController {
     @Operation(summary = "제품명에 따른 리뷰 크롤링 결과 조회")
     public SuccessResponse<ReviewCrawlingResponse> getReviewCrawlingResult(@RequestParam("competitorProductId") Long competitorProductId) {
 
-        return null;
+        List<RawReview> rawReviews = rawReviewRepository.findByCompetitorProduct_CompetitorProductId(competitorProductId);
+
+        List<ReviewCrawlingResponse.ReviewDetail> reviewDetails = rawReviews.stream()
+                .map(ReviewCrawlingResponse.ReviewDetail::from)
+                .toList();
+
+        ReviewCrawlingResponse response = new ReviewCrawlingResponse(
+                reviewDetails,
+                "COMPLETED"
+        );
+
+        return SuccessResponse.ok(response, "리뷰 크롤링 결과가 조회되었습니다.");
     }
 
     @PostMapping("/competitor-specs")

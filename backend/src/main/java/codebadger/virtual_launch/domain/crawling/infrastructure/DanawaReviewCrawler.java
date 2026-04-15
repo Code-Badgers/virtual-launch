@@ -34,7 +34,7 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
     @Override
     public ReviewsCrawlingResultDto crawlReviews(String keyword) {
         WebDriver driver = webDriverFactory.createDriver();
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
@@ -48,7 +48,7 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
             int totalReviewCount = parseTotalReviewCount(driver);
 
             // 별점별 리뷰 수집 (결과를 리스트로 받음)
-            List<RawReview> reviewList = collectReviewsByStar(driver, js);
+            List<RawReview> reviewList = collectReviewsByStar(driver, wait, js);
 
             // 전체 개수와 수집된 리뷰 리스트를 "CrawlingResultDto"라는 상자에 함께 담아서 반환
             return ReviewsCrawlingResultDto.builder()
@@ -108,7 +108,7 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
         return totalReviewCount;
     }
 
-    private List<RawReview> collectReviewsByStar(WebDriver driver, JavascriptExecutor js) {
+    private List<RawReview> collectReviewsByStar(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) {
         List<RawReview> localReviewList = new ArrayList<>();
 
         // 별점별 리뷰 1개씩 수집
@@ -116,40 +116,57 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
             try {
                 int targetWidth = star * 20;
 
-                // 드롭다운 필터를 열기 위해 grade_select 영역을 먼저 클릭
-                WebElement dropDown = driver.findElement(By.className("grade_select"));
+                By dropDownLocator = By.className("grade_select");
+                List<WebElement> dropDownList = driver.findElements(dropDownLocator);
+
+                if(dropDownList.isEmpty()) {
+                    log.info("별점 필터를 찾을 수 없습니다.");
+                    break;
+                }
+
+                // 드롭다운 필터를 열기 위해 grade_select 영역 클릭
+                WebElement dropDown = wait.until(ExpectedConditions.visibilityOfElementLocated(dropDownLocator));
+
                 js.executeScript("arguments[0].click();", dropDown);
                 Thread.sleep(500); // 드롭다운 메뉴가 펼쳐질 때까지 잠시 대기
 
                 // XPath를 이용한 별점 버튼 타겟팅
                 String xpath = String.format("//div[contains(@class, 'grade_select')]//a[.//span[contains(@class, 'star_mask') and contains(@style, '%d')]]", targetWidth);
-                WebElement starFilterBtn = driver.findElement(By.xpath(xpath));
+                By starFilterLocator = By.xpath(xpath);
 
-                // 별점 버튼 클릭
-                js.executeScript("arguments[0].click();", starFilterBtn);
+                // 해당 버튼 요소가 리스트로 존재하는지 확인
+                List<WebElement> starFilters = driver.findElements(starFilterLocator);
 
-                // 필터 적용 후 서버에서 AJAX로 리뷰를 새로 가져올 때까지 대기
-                Thread.sleep(1500);
+                if (!starFilters.isEmpty()) { // 리뷰가 존재할 경우
 
-                // 리뷰가 새로 로드된 후 페이지 소스를 다시 파싱
-                Document doc = Jsoup.parse(driver.getPageSource());
+                    // 별점 버튼 클릭
+                    WebElement starFilterBtn = driver.findElement(By.xpath(xpath));
+                    js.executeScript("arguments[0].click();", starFilterBtn);
 
-                // .rvw_list 안의 첫 번째 li 추출 (해당 별점에 대한 첫 번째 리뷰 추출)
-                Elements items = doc.select(".rvw_list li");
+                    // 필터 적용 후 서버에서 AJAX로 리뷰를 새로 가져올 때까지 대기
+                    Thread.sleep(1500);
 
-                if (!items.isEmpty()) { // 리뷰가 존재할 경우
-                    Element firstItem = items.first();
+                    // 리뷰가 새로 로드된 후 페이지 소스를 다시 파싱
+                    Document doc = Jsoup.parse(driver.getPageSource());
 
-                    // 리뷰 본문 텍스트 추출
-                    String content = firstItem.select(".atc").text();
+                    // .rvw_list 안의 첫 번째 li 추출 (해당 별점에 대한 첫 번째 리뷰 추출)
+                    Elements items = doc.select(".rvw_list li");
 
-                    if (!content.isEmpty()) {
-                        localReviewList.add(RawReview.builder()
-                                .platform("danawa")
-                                .originalContent(content)
-                                .starRating(star) // 필터링한 별점을 직접 주입
-                                .build());
+                    if (!items.isEmpty()) {
+                        Element firstItem = items.first();
+
+                        // 리뷰 본문 텍스트 추출
+                        String content = firstItem.select(".atc").text();
+
+                        if (!content.isEmpty()) {
+                            localReviewList.add(RawReview.builder()
+                                    .platform("danawa")
+                                    .originalContent(content)
+                                    .starRating(star) // 필터링한 별점을 직접 주입
+                                    .build());
+                        }
                     }
+                    log.info("{}점 리뷰 수집 완료", star);
                 } else {
                     log.info("{}점 리뷰가 존재하지 않음", star);
                 }
