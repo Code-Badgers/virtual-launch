@@ -26,14 +26,16 @@ public class ReviewCrawlingService {
 
     @Async
     @Transactional
-    public void crawlReviews(String keyword, Long competitorProductId) {
+    public void crawlReviews(String keyword, Long competitorProductId, Integer limit) {
+        // 크롤링할 리뷰 갯수 미입력 시 기본값 5
+        int targetLimit = (limit != null) ? limit : 5;
 
         try{
             CompetitorProduct competitorProduct = competitorProductRepository.findById(competitorProductId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.COMPETITOR_PRODUCT_NOT_FOUND));
 
             // 크롤링 수행
-            ReviewsCrawlingResultDto crawlingResult = danawaReviewCrawler.crawlReviews(keyword);
+            ReviewsCrawlingResultDto crawlingResult = danawaReviewCrawler.crawlReviews(keyword, targetLimit);
             List<RawReview> reviews = crawlingResult.getReviews();
 
             if(reviews.isEmpty() || reviews == null){

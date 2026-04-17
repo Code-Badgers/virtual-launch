@@ -29,7 +29,9 @@ public class CompetitorCrawlingService {
 
     @Async
     @Transactional
-    public void crawlSpecs(String keyword, Long productId) { // 비동기 경쟁사 제품 스펙 크롤링
+    public void crawlSpecs(String keyword, Long productId, Integer limit) { // 비동기 경쟁사 제품 스펙 크롤링
+        // 크롤링할 상세 스펙 갯수 미입력 시 기본값 3
+        int targetLimit = (limit != null) ? limit : 3;
 
         try {
             // 사용자 런칭 예정 제품으로부터 카테고리 조회 (필수 입력 스펙 확인용)
@@ -39,7 +41,7 @@ public class CompetitorCrawlingService {
             Long categoryId = productSpec.getCategory().getCategoryId();
 
             // 크롤링 수행
-            SpecCrawlingResultDto dto = danawaSpecCrawler.crawlSpecs(keyword);
+            SpecCrawlingResultDto dto = danawaSpecCrawler.crawlSpecs(keyword, targetLimit);
 
             // rawSpec 가공 로직
             Map<String, Map<String, RequiredSpec>> detailedSpecs =

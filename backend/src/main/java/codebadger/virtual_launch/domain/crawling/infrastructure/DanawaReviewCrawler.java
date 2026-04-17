@@ -32,14 +32,14 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
     }
 
     @Override
-    public ReviewsCrawlingResultDto crawlReviews(String keyword) {
+    public ReviewsCrawlingResultDto crawlReviews(String keyword, int limit) {
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         try {
-            navigateToProductDetail(driver, keyword); // 부모 로직 호출
+            navigateToProductDetail(driver, keyword, limit); // 부모 로직 호출
 
             // 스크롤 및 섹션 활성화
             scrollToReviewSection(driver, wait, js);
@@ -69,7 +69,16 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
         boolean isReviewLoaded = false;
 
         // 리뷰 요소가 나타날 때까지 대기
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("danawa-prodBlog-productOpinion-list-self")));
+        try {
+            // 화면에 나타날 때까지 대기
+            wait.until(ExpectedConditions.or(
+                    ExpectedConditions.presenceOfElementLocated(By.id("danawa-prodBlog-productOpinion-list-self")),
+                    ExpectedConditions.presenceOfElementLocated(By.id("danawa-prodBlog-companyReview-button-tab-companyReview"))
+            ));
+        } catch (Exception e) {
+            log.info("리뷰가 존재하지 않는 상품입니다.");
+            return;
+        }
 
         for (int i = 0; i < 20; i++) {
             try {

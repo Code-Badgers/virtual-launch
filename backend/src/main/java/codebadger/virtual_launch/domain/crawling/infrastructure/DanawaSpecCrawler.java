@@ -32,14 +32,14 @@ public class DanawaSpecCrawler extends DanawaBaseCrawler  implements SpecCrawler
     }
 
     @Override
-    public SpecCrawlingResultDto crawlSpecs (String keyword) { //
+    public SpecCrawlingResultDto crawlSpecs (String keyword, int limit) { //
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         try {
-            navigateToProductDetail(driver, keyword); // 부모 로직 호출
+            navigateToProductDetail(driver, keyword, limit); // 부모 로직 호출
 
             String modelName = extractModelName(driver); // 제품명
             BigDecimal currentPrice = extractCurrentPrice(driver); // 현재 가격 (최저가 기준)
