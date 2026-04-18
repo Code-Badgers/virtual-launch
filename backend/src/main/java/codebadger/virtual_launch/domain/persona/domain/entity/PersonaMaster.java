@@ -3,7 +3,6 @@ package codebadger.virtual_launch.domain.persona.domain.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
 
 @Table(name = "persona_master")
 @NoArgsConstructor
