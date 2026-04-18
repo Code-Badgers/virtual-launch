@@ -1,13 +1,14 @@
 package codebadger.virtual_launch.domain.persona.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Table(name = "persona_master")
-@NoArgsConstructor
-@Getter
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(access = AccessLevel.PRIVATE)
 public class PersonaMaster {
 
     @Id
@@ -31,4 +32,14 @@ public class PersonaMaster {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String systemPrompt; // 직업, 성격 등이 합쳐진 최종 프롬프트
 
+    public static PersonaMaster create(String ageGroup, String gender, String incomeLevel,
+                                       PurchaseCriteria criteria, String systemPrompt) {
+        return PersonaMaster.builder()
+                .ageGroup(ageGroup)
+                .gender(gender)
+                .incomeLevel(incomeLevel)
+                .purchaseCriteria(criteria)
+                .systemPrompt(systemPrompt)
+                .build();
+    }
 }
