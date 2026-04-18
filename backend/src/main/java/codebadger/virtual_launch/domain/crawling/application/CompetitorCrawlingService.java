@@ -11,6 +11,7 @@ import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorP
 import codebadger.virtual_launch.domain.simulation.domain.repository.ProductSpecRepository;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,21 +42,24 @@ public class CompetitorCrawlingService {
             Long categoryId = productSpec.getCategory().getCategoryId();
 
             // 크롤링 수행
-            SpecCrawlingResultDto dto = danawaSpecCrawler.crawlSpecs(keyword, targetLimit);
+            List<SpecCrawlingResultDto> dtoList = danawaSpecCrawler.crawlSpecs(keyword, targetLimit);
 
-            // rawSpec 가공 로직
-            Map<String, Map<String, RequiredSpec>> detailedSpecs =
-                    processRawSpecs(productSpec.getCategory().getRequiredSpecs(), dto.getRawSpecs());
+            for (SpecCrawlingResultDto resultDto : dtoList) {
+                // rawSpec 가공 로직
+                Map<String, Map<String, RequiredSpec>> detailedSpecs =
+                        processRawSpecs(productSpec.getCategory().getRequiredSpecs(), resultDto.getRawSpecs());
 
-            CompetitorProduct competitorProduct = CompetitorProduct.builder()
-                    .category(productSpec.getCategory())
-                    .modelName(dto.getModelName())
-                    .currentPrice(dto.getCurrentPrice())
-                    .detailedSpecs(detailedSpecs)
-                    .lastCrawledAt(OffsetDateTime.now())
-                    .build();
 
-            competitorProductRepository.save(competitorProduct);
+                CompetitorProduct competitorProduct = CompetitorProduct.builder()
+                        .category(productSpec.getCategory())
+                        .modelName(resultDto.getModelName())
+                        .currentPrice(resultDto.getCurrentPrice())
+                        .detailedSpecs(detailedSpecs)
+                        .lastCrawledAt(OffsetDateTime.now())
+                        .build();
+
+                competitorProductRepository.save(competitorProduct);
+            }
 
         } catch (Exception e) {
             log.error("경쟁사 제품 스펙 크롤링 중 오류 발생: {}", e.getMessage());

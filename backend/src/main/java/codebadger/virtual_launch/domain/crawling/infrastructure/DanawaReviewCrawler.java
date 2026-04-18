@@ -39,8 +39,15 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         try {
-            navigateToProductDetail(driver, keyword, limit); // 부모 로직 호출
+            // 하나의 경쟁사 제품을 대상으로 수집을 진행하니 1개의 유효한 상품만 찾기
+            List<String> productUrls = navigateToProductDetail(driver, keyword, 1); // 부모 로직 호출
 
+            if (productUrls.isEmpty()) {
+                log.warn("유효한 상품 URL을 찾을 수 없습니다. 키워드: {}", keyword);
+                throw new BusinessException(ErrorCode.REVIEW_CRAWLING_FAILED);
+            }
+
+            driver.get(productUrls.get(0)); // 타겟 페이지로 이동
             // 스크롤 및 섹션 활성화
             scrollToReviewSection(driver, wait, js);
 
@@ -127,59 +134,59 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
 
                 By dropDownLocator = By.className("grade_select");
                 List<WebElement> dropDownList = driver.findElements(dropDownLocator);
-
                 if(dropDownList.isEmpty()) {
                     log.info("별점 필터를 찾을 수 없습니다.");
                     break;
                 }
-
                 // 드롭다운 필터를 열기 위해 grade_select 영역 클릭
                 WebElement dropDown = wait.until(ExpectedConditions.visibilityOfElementLocated(dropDownLocator));
 
                 js.executeScript("arguments[0].click();", dropDown);
-                Thread.sleep(500); // 드롭다운 메뉴가 펼쳐질 때까지 잠시 대기
 
                 // XPath를 이용한 별점 버튼 타겟팅
                 String xpath = String.format("//div[contains(@class, 'grade_select')]//a[.//span[contains(@class, 'star_mask') and contains(@style, '%d')]]", targetWidth);
                 By starFilterLocator = By.xpath(xpath);
 
                 // 해당 버튼 요소가 리스트로 존재하는지 확인
-                List<WebElement> starFilters = driver.findElements(starFilterLocator);
+                WebElement starFilterBtn = wait.until(ExpectedConditions.presenceOfElementLocated(starFilterLocator));
 
-                if (!starFilters.isEmpty()) { // 리뷰가 존재할 경우
-
-                    // 별점 버튼 클릭
-                    WebElement starFilterBtn = driver.findElement(By.xpath(xpath));
-                    js.executeScript("arguments[0].click();", starFilterBtn);
-
-                    // 필터 적용 후 서버에서 AJAX로 리뷰를 새로 가져올 때까지 대기
-                    Thread.sleep(1500);
-
-                    // 리뷰가 새로 로드된 후 페이지 소스를 다시 파싱
-                    Document doc = Jsoup.parse(driver.getPageSource());
-
-                    // .rvw_list 안의 첫 번째 li 추출 (해당 별점에 대한 첫 번째 리뷰 추출)
-                    Elements items = doc.select(".rvw_list li");
-
-                    if (!items.isEmpty()) {
-                        Element firstItem = items.first();
-
-                        // 리뷰 본문 텍스트 추출
-                        String content = firstItem.select(".atc").text();
-
-                        if (!content.isEmpty()) {
-                            localReviewList.add(RawReview.builder()
-                                    .platform("danawa")
-                                    .originalContent(content)
-                                    .starRating(star) // 필터링한 별점을 직접 주입
-                                    .build());
-                        }
-                    }
-                    log.info("{}점 리뷰 수집 완료", star);
-                } else {
-                    log.info("{}점 리뷰가 존재하지 않음", star);
+                WebElement oldReviewItem = null;
+                List<WebElement> existingReviews = driver.findElements(By.cssSelector(".rvw_list li"));
+                if (!existingReviews.isEmpty()) { // 리뷰가 존재할 경우
+                    oldReviewItem = existingReviews.get(0);
                 }
+                // 별점 필터 클릭
+                js.executeScript("arguments[0].click();", starFilterBtn);
 
+                // 기억해둔 이전 리뷰 요소가 화면에서 소멸될 때까지 동적 대기
+                if (oldReviewItem != null) {
+                    // 기억해둔 이전 리뷰 요소가 화면에서 소멸될 때까지 동적 대기
+                    wait.until(ExpectedConditions.stalenessOf(oldReviewItem));
+                }
+                // 새로운 리뷰 리스트가 DOM에 나타날 때까지 대기
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".rvw_list li")));
+
+                // 리뷰가 새로 로드된 후 페이지 소스를 다시 파싱
+                Document doc = Jsoup.parse(driver.getPageSource());
+
+                // .rvw_list 안의 첫 번째 li 추출 (해당 별점에 대한 첫 번째 리뷰 추출)
+                Elements items = doc.select(".rvw_list li");
+
+                if (!items.isEmpty()) {
+                    Element firstItem = items.first();
+
+                    // 리뷰 본문 텍스트 추출
+                    String content = firstItem.select(".atc").text();
+
+                    if (!content.isEmpty()) {
+                        localReviewList.add(RawReview.builder()
+                                .platform("danawa")
+                                .originalContent(content)
+                                .starRating(star) // 필터링한 별점을 직접 주입
+                                .build());
+                    }
+                }
+                log.info("{}점 리뷰 수집 완료", star);
             } catch (Exception e) {
                 log.warn("{}점 필터 조작 실패: {}", star, e.getMessage());
             }

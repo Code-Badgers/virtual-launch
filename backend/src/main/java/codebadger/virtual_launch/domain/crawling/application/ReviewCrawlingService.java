@@ -38,7 +38,7 @@ public class ReviewCrawlingService {
             ReviewsCrawlingResultDto crawlingResult = danawaReviewCrawler.crawlReviews(keyword, targetLimit);
             List<RawReview> reviews = crawlingResult.getReviews();
 
-            if(reviews.isEmpty() || reviews == null){
+            if(reviews == null || reviews.isEmpty()){
                 log.warn("크롤링된 리뷰가 없습니다. 키워드: {}", keyword);
                 return;
             }

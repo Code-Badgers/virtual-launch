@@ -6,7 +6,9 @@ import codebadger.virtual_launch.domain.crawling.domain.SpecCrawler;
 import codebadger.virtual_launch.domain.crawling.domain.SpecCrawlingResultDto;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -32,28 +34,37 @@ public class DanawaSpecCrawler extends DanawaBaseCrawler  implements SpecCrawler
     }
 
     @Override
-    public SpecCrawlingResultDto crawlSpecs (String keyword, int limit) { //
+    public List<SpecCrawlingResultDto> crawlSpecs (String keyword, int limit) { //
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         try {
-            navigateToProductDetail(driver, keyword, limit); // 부모 로직 호출
+            List<SpecCrawlingResultDto> resultList = new ArrayList<>();
 
-            String modelName = extractModelName(driver); // 제품명
-            BigDecimal currentPrice = extractCurrentPrice(driver); // 현재 가격 (최저가 기준)
+            List<String> productUrls =  navigateToProductDetail(driver, keyword, limit); // 부모 로직 호출
+            
+            for(String url : productUrls) {
+                driver.get(url); // 타겟 페이지로 이동
 
-            // 스크롤 및 섹션 활성화
-            scrollToSpecSection(driver, wait, js);
+                String modelName = extractModelName(driver); // 제품명
+                BigDecimal currentPrice = extractCurrentPrice(driver); // 현재 가격 (최저가 기준)
 
-            Map<String, String> rawSpecs = extractRawSpecs(driver); // 제품 스펙 테이블
+                // 스크롤 및 섹션 활성화
+                scrollToSpecSection(driver, wait, js);
 
-            return SpecCrawlingResultDto.builder()
-                    .modelName(modelName)
-                    .currentPrice(currentPrice)
-                    .rawSpecs(rawSpecs)
-                    .build();
+                Map<String, String> rawSpecs = extractRawSpecs(driver); // 제품 스펙 테이블
+
+                SpecCrawlingResultDto resultDto =  SpecCrawlingResultDto.builder()
+                        .modelName(modelName)
+                        .currentPrice(currentPrice)
+                        .rawSpecs(rawSpecs)
+                        .build();
+
+                resultList.add(resultDto);
+            }
+            return resultList;
 
         } catch (Exception e) {
             log.error("크롤링 중 오류 발생: {}", e.getMessage());

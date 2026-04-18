@@ -8,6 +8,6 @@ public record ReviewCrawlingRequest (
         Long competitorProductId,
 
         @Min(value = 5, message = "최소 5개 이상 크롤링 요청 필요")
-        @Max(value = 50, message = "리뷰 크롤링은 한 번에 최대 100개까지만 크롤링 가능")
+        @Max(value = 50, message = "리뷰 크롤링은 한 번에 최대 50개까지만 크롤링 가능")
         Integer limit
 ) {}
