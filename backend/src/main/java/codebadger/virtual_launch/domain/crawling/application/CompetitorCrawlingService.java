@@ -4,20 +4,17 @@ import codebadger.virtual_launch.common.exception.BusinessException;
 import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.crawling.domain.SpecCrawlingResultDto;
 import codebadger.virtual_launch.domain.crawling.infrastructure.DanawaSpecCrawler;
-import codebadger.virtual_launch.domain.simulation.domain.entity.CompetitorProduct;
+import codebadger.virtual_launch.domain.simulation.domain.entity.Category;
 import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
 import codebadger.virtual_launch.domain.simulation.domain.entity.RequiredSpec;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
 import codebadger.virtual_launch.domain.simulation.domain.repository.ProductSpecRepository;
-import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -27,9 +24,9 @@ public class CompetitorCrawlingService {
     private final DanawaSpecCrawler danawaSpecCrawler;
     private final CompetitorProductRepository competitorProductRepository;
     private final ProductSpecRepository productSpecRepository;
+    private final CompetitorProductSaver competitorProductSaver;
 
     @Async
-    @Transactional
     public void crawlSpecs(String keyword, Long productId, Integer limit) { // 비동기 경쟁사 제품 스펙 크롤링
         // 크롤링할 상세 스펙 갯수 미입력 시 기본값 3
         int targetLimit = (limit != null) ? limit : 3;
@@ -39,72 +36,18 @@ public class CompetitorCrawlingService {
             ProductSpec productSpec = productSpecRepository.findById(productId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
-            Long categoryId = productSpec.getCategory().getCategoryId();
+            // 루프 외부로 추출하여 중복 탐색 방지
+            Map<String, Map<String, RequiredSpec>> categoryTemplate = productSpec.getCategory().getRequiredSpecs();
+            Category category = productSpec.getCategory();
 
             // 크롤링 수행
             List<SpecCrawlingResultDto> dtoList = danawaSpecCrawler.crawlSpecs(keyword, targetLimit);
 
-            for (SpecCrawlingResultDto resultDto : dtoList) {
-                // rawSpec 가공 로직
-                Map<String, Map<String, RequiredSpec>> detailedSpecs =
-                        processRawSpecs(productSpec.getCategory().getRequiredSpecs(), resultDto.getRawSpecs());
-
-
-                CompetitorProduct competitorProduct = CompetitorProduct.builder()
-                        .category(productSpec.getCategory())
-                        .modelName(resultDto.getModelName())
-                        .currentPrice(resultDto.getCurrentPrice())
-                        .detailedSpecs(detailedSpecs)
-                        .lastCrawledAt(OffsetDateTime.now())
-                        .build();
-
-                competitorProductRepository.save(competitorProduct);
-            }
+            competitorProductSaver.saveCrawledProducts(dtoList, category, categoryTemplate);
 
         } catch (Exception e) {
             log.error("경쟁사 제품 스펙 크롤링 중 오류 발생: {}", e.getMessage());
             throw new RuntimeException("크롤링 비동기 트랜잭션 롤백 처리", e);
         }
-    }
-
-    // rawSpecs을 카테고리 구조에 맞게 매핑
-    private Map<String, Map<String, RequiredSpec>> processRawSpecs(
-            Map<String, Map<String, RequiredSpec>> categoryTemplate,
-            Map<String, String> rawSpecs) {
-
-        Map<String, Map<String, RequiredSpec>> detailedSpecs = new HashMap<>();
-
-        // 카테고리 템플릿을 순회하면서 rawSpecs에서 값 추출
-        // 대분류 순회
-        for(Map.Entry<String, Map<String, RequiredSpec>> groupEntry : categoryTemplate.entrySet()) {
-            String categoryName = groupEntry.getKey();
-            Map<String, RequiredSpec> specMap = groupEntry.getValue();
-
-            // 대뷴류별 세부 스펙 매핑 결과 저장할 맵
-            Map<String, RequiredSpec> detailedSpecMap = new HashMap<>();
-
-            // 세부 스펙 순회
-            for(Map.Entry<String, RequiredSpec> specEntry : specMap.entrySet()) {
-                String specName = specEntry.getKey();
-                RequiredSpec requiredSpec = specEntry.getValue();
-
-                // 크롤링한 내용이 카테고리 템플릿의 상세 스펙의 Key와 일치하는 경우 값을 꺼내고 없을 경우 정보 없음 반환
-                String rawValue = rawSpecs.getOrDefault(specName, "정보 없음");
-
-                // 추후 매핑 로직 개선 필요 유사한 키 매핑(cpu, 코어 종류와 같이 나타내는 이름이 다른 경우), 단위 변환 등
-                RequiredSpec detailedSpec = RequiredSpec.builder()
-                        .label(requiredSpec.label())
-                        .type(requiredSpec.type()) // 입력 폼 형태
-                        .options(requiredSpec.options())
-                        .value(rawValue) // 크롤링한 값 주입
-                        .selectedOption(requiredSpec.selectedOption())
-                        .build();
-
-                detailedSpecMap.put(specName, detailedSpec);
-            }
-            detailedSpecs.put(categoryName, detailedSpecMap);
-        }
-
-        return detailedSpecs;
     }
 }

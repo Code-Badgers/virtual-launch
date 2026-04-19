@@ -1,6 +1,5 @@
 package codebadger.virtual_launch.domain.crawling.domain;
 
-import codebadger.virtual_launch.common.domain.BaseTimeEntity;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -9,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class SpecCrawlingResultDto extends BaseTimeEntity {
+public class SpecCrawlingResultDto{
     private String brandName; // 브랜드명
     private String modelName; // 경쟁사 제품명
     private BigDecimal releasePrice; // 출시 가격

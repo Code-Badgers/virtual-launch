@@ -11,6 +11,7 @@ import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorP
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.internal.util.stereotypes.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +24,9 @@ public class ReviewCrawlingService {
     private final DanawaReviewCrawler danawaReviewCrawler;
     private final RawReviewRepository rawReviewRepository;
     private final CompetitorProductRepository competitorProductRepository;
+    private final ReviewSaver reviewSaver;
 
     @Async
-    @Transactional
     public void crawlReviews(String keyword, Long competitorProductId, Integer limit) {
         // 크롤링할 리뷰 갯수 미입력 시 기본값 5
         int targetLimit = (limit != null) ? limit : 5;
@@ -43,18 +44,11 @@ public class ReviewCrawlingService {
                 return;
             }
 
-            // 연관관계 매핑
-            for(RawReview rawReview : reviews) {
-                rawReview.setCompetitorProduct(competitorProduct);
-            }
-
-            // 크롤링 결과 저장
-            rawReviewRepository.saveAll(reviews);
+            reviewSaver.saveReviews(reviews, competitorProduct);
 
         } catch (Exception e) {
             log.error("리뷰 크롤링 중 오류 발생: {}", e.getMessage());
             throw new RuntimeException("리뷰 크롤링 비동기 트랜잭션 롤백 처리", e);
         }
     }
-
 }
