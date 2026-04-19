@@ -1,12 +1,17 @@
 package codebadger.virtual_launch.domain.crawling.application;
 
-import codebadger.virtual_launch.domain.crawling.domain.CrawlingResultDto;
+import codebadger.virtual_launch.common.exception.BusinessException;
+import codebadger.virtual_launch.common.exception.ErrorCode;
+import codebadger.virtual_launch.domain.crawling.domain.ReviewsCrawlingResultDto;
 import codebadger.virtual_launch.domain.crawling.domain.entity.RawReview;
 import codebadger.virtual_launch.domain.crawling.domain.repository.RawReviewRepository;
-import codebadger.virtual_launch.domain.crawling.infrastructure.DanawaCrawler;
+import codebadger.virtual_launch.domain.crawling.infrastructure.DanawaReviewCrawler;
+import codebadger.virtual_launch.domain.simulation.domain.entity.CompetitorProduct;
+import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.internal.util.stereotypes.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,20 +21,34 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ReviewCrawlingService {
 
-    private final DanawaCrawler danawaCrawler;
+    private final DanawaReviewCrawler danawaReviewCrawler;
     private final RawReviewRepository rawReviewRepository;
+    private final CompetitorProductRepository competitorProductRepository;
+    private final ReviewSaver reviewSaver;
 
     @Async
-    @Transactional
-    public void crawlAndSaveReviews(String keyword) {
-        // 크롤링 수행
-        CrawlingResultDto crawlingResult = danawaCrawler.crawlReviews(keyword);
-        List<RawReview> reviews = crawlingResult.getReviews();
+    public void crawlReviews(String keyword, Long competitorProductId, Integer limit) {
+        // 크롤링할 리뷰 갯수 미입력 시 기본값 5
+        int targetLimit = (limit != null) ? limit : 5;
 
-        // 수집된 리뷰에 카테고리 연결하기
+        try{
+            CompetitorProduct competitorProduct = competitorProductRepository.findById(competitorProductId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.COMPETITOR_PRODUCT_NOT_FOUND));
 
-        // 크롤링 결과 저장
-//        rawReviewRepository.saveAll(reviews);
-//        return crawlingResult;
+            // 크롤링 수행
+            ReviewsCrawlingResultDto crawlingResult = danawaReviewCrawler.crawlReviews(keyword, targetLimit);
+            List<RawReview> reviews = crawlingResult.getReviews();
+
+            if(reviews == null || reviews.isEmpty()){
+                log.warn("크롤링된 리뷰가 없습니다. 키워드: {}", keyword);
+                return;
+            }
+
+            reviewSaver.saveReviews(reviews, competitorProduct);
+
+        } catch (Exception e) {
+            log.error("리뷰 크롤링 중 오류 발생: {}", e.getMessage());
+            throw new RuntimeException("리뷰 크롤링 비동기 트랜잭션 롤백 처리", e);
+        }
     }
 }

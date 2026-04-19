@@ -40,7 +40,7 @@ public class SimulationTaskExecutor {
                 saveMatchedCompetitor(project, result, i + 1);
 
                 // 리뷰 크롤링 트리거
-                reviewCrawlingService.crawlAndSaveReviews(result.product().getModelName());
+                reviewCrawlingService.crawlReviews(result.product().getModelName(), result.product().getCompetitorProductId(), limit);
             }
             project.updateStatus(SimulationStatus.COMPLETED);
         } catch (Exception e) {
