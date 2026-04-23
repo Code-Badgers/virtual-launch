@@ -1,6 +1,7 @@
 package codebadger.virtual_launch.domain.simulation.domain.entity;
 
 import codebadger.virtual_launch.common.domain.BaseTimeEntity;
+import codebadger.virtual_launch.domain.member.domain.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,6 +42,10 @@ public class ProductSpec extends BaseTimeEntity { // 가상 런칭 제품 스펙
     private Category category;
 
     // 외래 키 - 여러 제품 스펙은 한 명의 회원에 속한다 (N:1)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    @Schema(description = "제품 스펙을 등록한 회원")
+    private Member member;
 
     @Column(nullable = false, length = 100)
     @Schema(description = "제품명")

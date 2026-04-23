@@ -43,6 +43,7 @@ public class CompetitorCrawlingService {
             // 크롤링 수행
             List<SpecCrawlingResultDto> dtoList = danawaSpecCrawler.crawlSpecs(keyword, targetLimit);
 
+            log.info("경쟁사 제품 스펙 크롤링이 완료되었습니다.");
             competitorProductSaver.saveCrawledProducts(dtoList, category, categoryTemplate);
 
         } catch (Exception e) {

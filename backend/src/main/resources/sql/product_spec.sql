@@ -1,10 +1,10 @@
 -- 1. 고성능 전문가용 노트북 (비전북 Pro 16)
 INSERT INTO product_spec (
-    category_id, product_name, product_description, product_image_url,
+    category_id, member_id, product_name, product_description, product_image_url,
     planned_launch_date, planned_price,
     created_at, updated_at, required_specs
 ) VALUES (
-             1, '비전북 Pro 16', 'M3 Max 칩셋 탑재 전문가용 노트북', 'https://example.com/vision-pro.png',
+             1, 2, '비전북 Pro 16', 'M3 Max 칩셋 탑재 전문가용 노트북', 'https://example.com/vision-pro.png',
              '2026-10-15T09:00:00+09:00', 3500000,
              now(), now(),
              '{
@@ -24,11 +24,11 @@ INSERT INTO product_spec (
 
 -- 2. 가성비 학생용 노트북 (에듀북 에어)
 INSERT INTO product_spec (
-    category_id, product_name, product_description, product_image_url,
+    category_id, member_id, product_name, product_description, product_image_url,
     planned_launch_date, planned_price,
     created_at, updated_at, required_specs
 ) VALUES (
-             1, '에듀북 에어', '가볍고 배터리 오래가는 학생용 가성비 모델', 'https://example.com/edubook.png',
+             1, 2, '에듀북 에어', '가볍고 배터리 오래가는 학생용 가성비 모델', 'https://example.com/edubook.png',
              '2026-03-01T09:00:00+09:00', 1200000,
              now(), now(),
              '{

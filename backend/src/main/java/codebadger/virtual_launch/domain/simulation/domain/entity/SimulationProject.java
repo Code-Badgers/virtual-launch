@@ -1,6 +1,7 @@
 package codebadger.virtual_launch.domain.simulation.domain.entity;
 
 import codebadger.virtual_launch.common.domain.BaseTimeEntity;
+import codebadger.virtual_launch.domain.member.domain.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -40,6 +41,10 @@ public class SimulationProject extends BaseTimeEntity { // 시뮬레이션 시�
     private ProductSpec productSpec;
 
     // 외래 키 - 여러 시뮬레이션 프로젝트는 한 명의 회원을 가질 수 있다 (N:1)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    @Schema(description = "시뮬레이션 프로젝트를 생성한 회원")
+    private Member member;
 
     // 외래 키 - 여러 시뮬레이션 프로젝트는 하나의 제품 스펙을 가질 수 있다 (N:1)
     @OneToMany(mappedBy = "simulationProject", cascade = CascadeType.ALL)

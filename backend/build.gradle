@@ -69,6 +69,9 @@ dependencies {
 
 	// Spring Retry: 재시도 로직 라이브러리
 	implementation 'org.springframework.retry:spring-retry:2.0.6'
+
+    // WebClient
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }
 
 dependencyManagement {
