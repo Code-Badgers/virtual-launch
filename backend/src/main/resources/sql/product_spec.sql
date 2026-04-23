@@ -1,4 +1,8 @@
--- 1. 고성능 전문가용 노트북 (비전북 Pro 16)
+-- 1. 회원 데이터 삽입
+INSERT INTO member (member_id, email, password, created_at, role)
+VALUES (2, 'test@test.com', 'test', now(), 'ROLE_USER');
+
+-- 2. 고성능 전문가용 노트북 (비전북 Pro 16)
 INSERT INTO product_spec (
     category_id, member_id, product_name, product_description, product_image_url,
     planned_launch_date, planned_price,
@@ -22,7 +26,7 @@ INSERT INTO product_spec (
              }'::jsonb
          );
 
--- 2. 가성비 학생용 노트북 (에듀북 에어)
+-- 3. 가성비 학생용 노트북 (에듀북 에어)
 INSERT INTO product_spec (
     category_id, member_id, product_name, product_description, product_image_url,
     planned_launch_date, planned_price,

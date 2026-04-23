@@ -121,8 +121,10 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
         // 최종 평균 점수 계산
         double finalScore = (weightSum > 0) ? weightedScoreSum / weightSum : 0.0;
 
+        String feedback = "현재 AI 기반 유사도 분석 알고리즘이 연동 중입니다.";
+
         // 최종 점수 및 상세 내역 dto로 반환
-        return new MatchScoreDto(finalScore, eachScores);
+        return new MatchScoreDto(finalScore, feedback, eachScores);
     }
 
     // 정렬 및 상위 제품 선정 로직
