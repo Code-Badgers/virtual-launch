@@ -1,6 +1,7 @@
 -- 1. 회원 데이터 삽입
 INSERT INTO member (member_id, email, password, created_at, role)
-VALUES (2, 'test@test.com', 'test', now(), 'ROLE_USER');
+VALUES (2, 'test@test.com', 'test', now(), 'ROLE_USER')
+ON CONFLICT (member_id) DO NOTHING;
 
 -- 2. 고성능 전문가용 노트북 (비전북 Pro 16)
 INSERT INTO product_spec (
