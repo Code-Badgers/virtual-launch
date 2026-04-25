@@ -5,6 +5,7 @@ import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
 import codebadger.virtual_launch.domain.simulation.domain.entity.RequiredSpec;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
 import codebadger.virtual_launch.domain.simulation.infrastructure.ai.GeminiApiClient;
+import codebadger.virtual_launch.domain.simulation.infrastructure.ai.dto.AiMatchResult;
 import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchResultDto;
 import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchScoreDto;
 import java.util.HashMap;
@@ -74,7 +75,13 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
                         // Gemini API 호출하여 유사도 분석 결과 받기
                         String rawJsonText = geminiApiClient.generateText(prompt);
 
-                        return null;
+                        // 마크 다운 제거 (실제 json 부분만 추출)
+                        String cleanJson = rawJsonText.replace("```json", "").replace("```", "").trim();
+
+                        // 역직렬화 (JSON 문자열을 AiMatchResult 객체로 변환) - AiMatchResult 내부구조 스캔을 통해 필드 추출
+                        AiMatchResult aiMatchResult = objectMapper.readValue(cleanJson, AiMatchResult.class);
+
+                        return new MatchResultDto(comp, new MatchScoreDto(aiMatchResult.totalScore(), aiMatchResult.feedback(), aiMatchResult.itemScores()));
 
                     } catch(Exception e){
                         log.error("유사도 분석 중 오류 발생: {}", e.getMessage());

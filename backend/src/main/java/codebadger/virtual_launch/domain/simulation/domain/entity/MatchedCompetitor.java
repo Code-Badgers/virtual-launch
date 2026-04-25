@@ -1,6 +1,7 @@
 package codebadger.virtual_launch.domain.simulation.domain.entity;
 
 import codebadger.virtual_launch.common.domain.BaseTimeEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -9,11 +10,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -40,14 +44,25 @@ public class MatchedCompetitor extends BaseTimeEntity { // 중간 매핑 테이�
 
     private Integer matchRank; // 유사도 순위
 
+    @Column(columnDefinition = "TEXT")
+    private String feedback; // AI 종합 분ㅅ거 (점수 산정 이유) - AiMatchResult
+
+    @Column(columnDefinition = "json")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Double> itemScores; // 항목별 세부 점수 - AiMatchResult
+
     @Builder
     public MatchedCompetitor(SimulationProject simulationProject,
             CompetitorProduct competitorProduct,
             Double similarityScore,
-            Integer matchRank) {
+            Integer matchRank,
+            String feedback,
+            Map<String, Double> itemScores) {
         this.simulationProject = simulationProject;
         this.competitorProduct = competitorProduct;
         this.similarityScore = similarityScore;
         this.matchRank = matchRank;
+        this.feedback = feedback;
+        this.itemScores = itemScores;
     }
 }
