@@ -5,7 +5,6 @@ import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
 import codebadger.virtual_launch.domain.simulation.domain.entity.RequiredSpec;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
 import codebadger.virtual_launch.domain.simulation.infrastructure.ai.GeminiApiClient;
-import codebadger.virtual_launch.domain.simulation.infrastructure.ai.dto.AiMatchResult;
 import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchResultDto;
 import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchScoreDto;
 import java.util.HashMap;
@@ -27,6 +26,7 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
     private final GeminiApiClient geminiApiClient;
     private final ObjectMapper objectMapper;
     private final WeightBasedSpecCalculator weightBasedSpecCalculator;
+    private final ProductMatchPromptGenerator productMatchPromptGenerator;
 
     // 중첩된 구조의 JSON 데이터를 평탄화하여 각 항목별로 추출하는 로직
     private Map<String, String> flatten(Map<String, Map<String, RequiredSpec>> detailedSpecs) {
@@ -68,7 +68,11 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
                         String targetSpecJson = objectMapper.writeValueAsString(targetMap);
                         String competitorSpecJson = objectMapper.writeValueAsString(flatten(comp.getDetailedSpecs()));
 
-                        AiMatchResult aiMatchResult = geminiApiClient.analyzeSimilarity(targetSpecJson, competitorSpecJson);
+                        // AI 모델에 전달할 프롬프트
+                        String prompt = productMatchPromptGenerator.generate(targetSpecJson, competitorSpecJson);
+
+                        // Gemini API 호출하여 유사도 분석 결과 받기
+                        String rawJsonText = geminiApiClient.generateText(prompt);
 
                         return null;
 
