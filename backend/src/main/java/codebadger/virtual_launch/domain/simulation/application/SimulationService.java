@@ -2,6 +2,8 @@ package codebadger.virtual_launch.domain.simulation.application;
 
 import codebadger.virtual_launch.common.exception.BusinessException;
 import codebadger.virtual_launch.common.exception.ErrorCode;
+import codebadger.virtual_launch.domain.member.domain.entity.Member;
+import codebadger.virtual_launch.domain.member.domain.repository.MemberRepository;
 import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
 import codebadger.virtual_launch.domain.simulation.domain.entity.SimulationProject;
 import codebadger.virtual_launch.domain.simulation.domain.entity.SimulationStatus;
@@ -23,16 +25,22 @@ public class SimulationService {
     private final ProductSpecRepository productSpecRepository ;
     private final SimulationProjectRepository simulationProjectRepository;
     private final SimulationTaskExecutor simulationTaskExecutor;
+    private final MemberRepository memberRepository;
 
     //   사용자가 런칭하고자 하는 제품과 경쟁사의 제품을 명확히 구분
     @Transactional
-    public Long startSimulation(SimulationRequest dto) {
+    public Long startSimulation(SimulationRequest dto, Long memberId) {
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
         ProductSpec productSpec = productSpecRepository.findById((dto.productId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
         // 시뮬레이션 상태 업데이트 (영구 변경)
         SimulationProject project = SimulationProject.builder()
                 .productSpec(productSpec)
+                .member(member)
                 .projectName(dto.projectName())
                 .projectDescription(dto.projectDescription())
                 .simulationStatus(SimulationStatus.PROCESSING)
