@@ -1,5 +1,7 @@
 package codebadger.virtual_launch.domain.simulation.domain.service;
 
+import codebadger.virtual_launch.common.exception.BusinessException;
+import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.simulation.domain.entity.CompetitorProduct;
 import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
 import codebadger.virtual_launch.domain.simulation.domain.entity.RequiredSpec;
@@ -62,6 +64,11 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
         Map<String, String> targetMap = flatten(productSpec.getDetailedSpecs());
         List<CompetitorProduct> competitors = competitorProductRepository.findByCategory(productSpec.getCategory());
 
+        if (competitors == null || competitors.isEmpty()) {
+            log.warn("카테고리 '{}'에 해당하는 경쟁사 제품이 없습니다.", productSpec.getCategory().getCategoryName());
+            throw new BusinessException(ErrorCode.COMPETITOR_PRODUCT_NOT_FOUND);
+        }
+
         return competitors.stream()
                 .map(comp -> { // 리스트에서 하나씩 경쟁사 제품을 꺼내서 유사도 분석 수행
                     try{ // Gemini API를 활용한 유사도 분석
@@ -75,11 +82,17 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
                         // Gemini API 호출하여 유사도 분석 결과 받기
                         String rawJsonText = geminiApiClient.generateText(prompt);
 
+                        if(rawJsonText == null || rawJsonText.isBlank()) {
+                            throw new IllegalArgumentException("Gemini API 응답이 없습니다.\n 수동 계산기로 점수를 산출합니다.");
+                        }
+
                         // 마크 다운 제거 (실제 json 부분만 추출)
                         String cleanJson = rawJsonText.replace("```json", "").replace("```", "").trim();
 
                         // 역직렬화 (JSON 문자열을 AiMatchResult 객체로 변환) - AiMatchResult 내부구조 스캔을 통해 필드 추출
                         AiMatchResult aiMatchResult = objectMapper.readValue(cleanJson, AiMatchResult.class);
+
+                        log.info("AI 유사도 분석 성공 - 경쟁사 제품: {}, 총점: {}, 피드백: {}", comp.getModelName(), aiMatchResult.totalScore(), aiMatchResult.feedback());
 
                         return new MatchResultDto(comp, new MatchScoreDto(aiMatchResult.totalScore(), aiMatchResult.feedback(), aiMatchResult.itemScores()));
 

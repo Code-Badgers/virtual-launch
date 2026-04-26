@@ -9,35 +9,35 @@ import static org.mockito.Mockito.when;
 import codebadger.virtual_launch.domain.simulation.domain.entity.Category;
 import codebadger.virtual_launch.domain.simulation.domain.entity.CompetitorProduct;
 import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
-import codebadger.virtual_launch.domain.simulation.domain.repository.CategoryRepository;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
-import codebadger.virtual_launch.domain.simulation.domain.repository.ProductSpecRepository;
+import codebadger.virtual_launch.domain.simulation.infrastructure.ai.GeminiApiClient;
 import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchResultDto;
 import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchScoreDto;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
 
-@Disabled("AI 연동 리팩토링 진행 중이므로 임시로 테스트를 비활성화")
 @ExtendWith(MockitoExtension.class)
 class ProductMatcherTest {
 
     @Mock
-    private CategoryRepository categoryRepository;
+    private GeminiApiClient geminiApiClient;
     @Mock
-    private ProductSpecRepository productSpecRepository;
+    private ObjectMapper objectMapper;
     @Mock
     private CompetitorProductRepository competitorProductRepository;
     @Mock
     private WeightBasedSpecCalculator wegithBasedSpecCalculator;
+    @Mock
+    private ProductMatchPromptGenerator productMatchPromptGenerator;
 
     @InjectMocks
     private ProductMatcher productMatcher;
@@ -54,6 +54,7 @@ class ProductMatcherTest {
         );
     }
 
+
     @Test
     @DisplayName("가중치가 적용된 유사도 점수가 올바르게 계산되는지 테스트")
     void calculateWeightedScore() {
@@ -65,14 +66,13 @@ class ProductMatcherTest {
                 "Storage", "256GB"
         );
 
-        // 가중치 일치 여부 테스트
-        double expected = 100 / 0.6;
+        // 실제 가중치 계산 로직을 테스트하기 위해 Mockito 대신 실제 객체 사용
+        WeightBasedSpecCalculator calculator = new WeightBasedSpecCalculator();
 
         // When
-        MatchScoreDto result = wegithBasedSpecCalculator.calculateIndividualScore(targetMap, compMap);
+        MatchScoreDto result = calculator.calculateIndividualScore(targetMap, compMap);
 
         // Then
-        //assertEquals(expected, result.totalScore(), 0.01);
         assertEquals(0.0, result.eachScores().get("가격"));
         assertEquals(100.0, result.eachScores().get("CPU"));
 
@@ -100,6 +100,11 @@ class ProductMatcherTest {
 
         // 카테고리 조회 시 해당 두 경쟁사 제품 반환
         when(competitorProductRepository.findByCategory(any())).thenReturn(List.of(bestMatch, worstMatch));
+
+        when(objectMapper.writeValueAsString(any())).thenThrow(new RuntimeException("JSON 파싱 에러"));
+
+        MatchScoreDto dummyScore = new MatchScoreDto(85.0, "테스트용 피드백", new HashMap<>());
+        when(wegithBasedSpecCalculator.calculateIndividualScore(any(), any())).thenReturn(dummyScore);
 
         // When
         List<MatchResultDto> result = productMatcher.findTopMatches(productSpec, 5); // 최대 5개 제품과 비교하지만, 실제로는 2개 제품만 존재
