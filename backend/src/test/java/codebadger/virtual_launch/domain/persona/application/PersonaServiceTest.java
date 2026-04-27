@@ -45,6 +45,7 @@ class PersonaServiceTest {
         PersonaMaster savedPersona = PersonaMaster.create(
                 request.ageGroup(),
                 request.gender(),
+                request.occupation(),
                 request.incomeLevel(),
                 request.purchaseCriteria(),
                 "조립된 시스템 프롬프트"
