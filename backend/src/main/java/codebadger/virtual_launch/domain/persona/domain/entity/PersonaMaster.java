@@ -18,10 +18,13 @@ public class PersonaMaster {
     @Column(nullable = false, length = 20)
     private String ageGroup; // 연령대 (예: "20대", "30대")
 
-    @Column(length = 10)
+    @Column(nullable = false, length = 10)
     private String gender; // 성별
 
-    @Column(length = 20)
+    @Column(nullable = false, length = 50)
+    private String occupation; // 직업
+
+    @Column(nullable = false, length = 20)
     private String incomeLevel; // 소득 수준
 
     @Enumerated(EnumType.STRING)
