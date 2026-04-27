@@ -14,6 +14,10 @@ public record ReviewAnalysisAiResponse(
         @JsonProperty("review_tags")
         List<String> reviewTags,
 
+        // AI가 요약한 핵심 만족 사항
+        @JsonProperty("positive_points")
+        String positivePoints,
+
         // AI가 요약한 핵심 불만 사항
         @JsonProperty("pain_points")
         String painPoints

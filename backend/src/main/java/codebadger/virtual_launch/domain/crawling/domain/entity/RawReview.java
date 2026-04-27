@@ -49,5 +49,8 @@ public class RawReview { // 실제 리뷰 - 개별
     private String reviewTags; // 리뷰에서 추출된 키워드 (콤마로 구분)
 
     @Column(columnDefinition = "TEXT")
+    private String positivePoints; // 핵심 만족 사항
+
+    @Column(columnDefinition = "TEXT")
     private String painPoints; // 핵심 불만 사항
 }
