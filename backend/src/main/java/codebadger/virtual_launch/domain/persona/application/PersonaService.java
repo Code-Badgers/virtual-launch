@@ -24,6 +24,7 @@ public class PersonaService {
         PersonaMaster persona = PersonaMaster.create(
                 dto.ageGroup(),
                 dto.gender(),
+                dto.occupation(),
                 dto.incomeLevel(),
                 dto.purchaseCriteria(),
                 finalPrompt
