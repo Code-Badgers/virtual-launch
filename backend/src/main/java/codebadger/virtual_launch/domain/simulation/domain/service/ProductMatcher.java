@@ -79,25 +79,14 @@ public class ProductMatcher { // 사용자의 가상 상세 스펙과 경쟁사 
                         // AI 모델에 전달할 프롬프트
                         String prompt = productMatchPromptGenerator.generate(targetSpecJson, competitorSpecJson);
 
-                        // Gemini API 호출하여 유사도 분석 결과 받기
-                        String rawJsonText = geminiApiClient.generateText(prompt);
-
-                        if(rawJsonText == null || rawJsonText.isBlank()) {
-                            throw new IllegalArgumentException("Gemini API 응답이 없습니다.\n 수동 계산기로 점수를 산출합니다.");
-                        }
-
-                        // 마크 다운 제거 (실제 json 부분만 추출)
-                        String cleanJson = rawJsonText.replace("```json", "").replace("```", "").trim();
-
-                        // 역직렬화 (JSON 문자열을 AiMatchResult 객체로 변환) - AiMatchResult 내부구조 스캔을 통해 필드 추출
-                        AiMatchResult aiMatchResult = objectMapper.readValue(cleanJson, AiMatchResult.class);
+                        AiMatchResult aiMatchResult = geminiApiClient.generateText(prompt, AiMatchResult.class);
 
                         log.info("AI 유사도 분석 성공 - 경쟁사 제품: {}, 총점: {}, 피드백: {}", comp.getModelName(), aiMatchResult.totalScore(), aiMatchResult.feedback());
 
                         return new MatchResultDto(comp, new MatchScoreDto(aiMatchResult.totalScore(), aiMatchResult.feedback(), aiMatchResult.itemScores()));
 
                     } catch(Exception e){
-                        log.error("유사도 분석 중 오류 발생: {}", e.getMessage());
+                        log.error("유사도 분석 중 오류 발생: {}\n 수동 계산기로 점수를 산출하겠습니다.", e.getMessage());
                         // AI 통신 실패 시, 수동 계산기를 활용한 점수 산출로 대체
                         MatchScoreDto scoreDto = weightBasedSpecCalculator.calculateIndividualScore(targetMap, flatten(comp.getDetailedSpecs())); // 각 경쟁사 제품과의 점수 계산
                         return new MatchResultDto(comp, scoreDto); // 제품 정보와 점수 정보를 함께

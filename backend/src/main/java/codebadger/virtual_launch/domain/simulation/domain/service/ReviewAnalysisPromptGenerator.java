@@ -27,4 +27,8 @@ public class ReviewAnalysisPromptGenerator { // 리뷰 분석 프롬프트
               "pain_points": "가벼운 작업 외에는 심각한 발열과 그로 인한 성능 저하가 발생한다는 치명적인 불만이 있습니다. 배터리 타임이 매우 짧아 실사용에 불편함이 큽니다."
             }
             """;
+
+    public String generate(String rawReviews) {
+        return String.format(REVIEW_ANALYSIS_PROMPT_TEMPLATE, rawReviews);
+    }
 }

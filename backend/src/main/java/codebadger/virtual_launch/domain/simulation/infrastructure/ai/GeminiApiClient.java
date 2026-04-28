@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.util.retry.Retry;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Component
@@ -18,6 +19,7 @@ import reactor.util.retry.Retry;
 public class GeminiApiClient { //Gemini API 통신 및 메시지 규격 변환
 
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
 
     @Value("${gemini.api.key}")
     private String apiKey;
@@ -66,6 +68,28 @@ public class GeminiApiClient { //Gemini API 통신 및 메시지 규격 변환
             log.error("Gemini API 호출 중 치명적 오류 발생", e);
             return null;
         }
+    }
+
+    // 객체 자동 변환
+    public <T> T generateText(String prompt, Class<T> responseType) {
+        // 순수 텍스트 응답을 받아서 JSON으로 변환하는 로직
+        String rawJsonText = this.generateText(prompt);
+
+        if (rawJsonText == null || rawJsonText.isBlank()) {
+            throw new IllegalArgumentException("Gemini API 응답이 없습니다.");
+        }
+
+        // 마크 다운 제거 (실제 json 부분만 추출)
+        String cleanJson = rawJsonText.replace("```json", "").replace("```", "").trim();
+
+        // 원하는 객체로 자동 변환 후 리턴
+        try {
+            return objectMapper.readValue(cleanJson, responseType);
+        } catch (Exception e) {
+            log.error("Gemini API 응답을 객체로 변환하는 중 오류 발생 - 변환 대상 클래스: {}, 응답 텍스트: {}", responseType.getSimpleName(), cleanJson);
+            throw new RuntimeException("AI JSON 파싱 오류", e);
+        }
+
     }
 
     private void throttle() {
