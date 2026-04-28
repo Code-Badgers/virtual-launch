@@ -36,11 +36,12 @@ public class PersonaMaster {
     private String systemPrompt; // 직업, 성격 등이 합쳐진 최종 프롬프트
 
     public static PersonaMaster create(String ageGroup, String gender, String incomeLevel,
-                                       PurchaseCriteria criteria, String systemPrompt) {
+                                       String occupation, PurchaseCriteria criteria, String systemPrompt) {
         return PersonaMaster.builder()
                 .ageGroup(ageGroup)
                 .gender(gender)
                 .incomeLevel(incomeLevel)
+                .occupation(occupation)
                 .purchaseCriteria(criteria)
                 .systemPrompt(systemPrompt)
                 .build();
