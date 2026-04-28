@@ -17,9 +17,6 @@ public class KosisIncomeResponse {
     @JsonProperty("UNIT_NM")
     private String unit;           // 단위 (예: "천원")
 
-    @JsonProperty("PRD_DE")
-    private String period;         // 수록 시점 (예: "2024")
-
     @JsonProperty("NM")
     private String categoryName;   // 분류 명칭 (예: "정보통신업" 또는 "전체근로자")
 
