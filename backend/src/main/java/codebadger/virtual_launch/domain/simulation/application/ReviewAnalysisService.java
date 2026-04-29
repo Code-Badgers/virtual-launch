@@ -32,6 +32,17 @@ public class ReviewAnalysisService {
 
         ReviewAnalysisAiResponse response = geminiApiClient.generateText(prompt, ReviewAnalysisAiResponse.class);
 
+        // AI 분석 결과 RawReview 엔터티에 업데이트
+        for (RawReview review : rawReviews) {
+            review.updateAnalysisResult(
+                    response.sentimentScore(),
+                    String.join(", ", response.reviewTags()), //List<String>를 String으로 변환하여 저장
+                    response.positivePoints(),
+                    response.painPoints()
+            );
+        }
+
+        rawReviewRepository.saveAll(rawReviews);
     }
 
 }

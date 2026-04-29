@@ -53,4 +53,12 @@ public class RawReview { // 실제 리뷰 - 개별
 
     @Column(columnDefinition = "TEXT")
     private String painPoints; // 핵심 불만 사항
+
+    public void updateAnalysisResult(double sentiment, String reviewTags, String positivePoints, String painPoints) {
+        this.sentiment = sentiment;
+        this.reviewTags = reviewTags;
+        this.positivePoints = positivePoints;
+        this.painPoints = painPoints;
+
+    }
 }
