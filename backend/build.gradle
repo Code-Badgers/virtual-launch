@@ -35,7 +35,7 @@ jacoco {
 
 test {
     useJUnitPlatform() // JUnit 5 사용
-    finalizedBy jacocoTestReport // 테스트 후에 Jacoco 리포트 생성
+    finalizedBy 'jacocoTestReport' // 테스트 후에 Jacoco 리포트 생성
 }
 
 jacocoTestReport {
