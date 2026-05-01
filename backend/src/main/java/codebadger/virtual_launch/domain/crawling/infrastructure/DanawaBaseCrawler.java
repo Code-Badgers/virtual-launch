@@ -15,6 +15,8 @@ public abstract class DanawaBaseCrawler {
 
     protected List<String> navigateToProductDetail (WebDriver driver, String keyword, Integer limit) {
         List<String> validUrls = new ArrayList<>();
+        int currentCount = 0;
+
         // 사용자가 입력한 키워드를 기반으로 검색 결과 url 동적 생성
         String searchUrl = "https://search.danawa.com/dsearch.php?query=" + keyword;
         driver.get(searchUrl);
@@ -26,7 +28,7 @@ public abstract class DanawaBaseCrawler {
         // 화면에 있는 모든 상품을 리스트로 가져오기
         List<WebElement> productLinks = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector(".prod_name a")));
 
-        for (int i = 0; i < productLinks.size(); i++) {
+        for (int i = 0; i < limit; i++) {
             // limit를 다 채우면 루프 즉시 종료
             if (validUrls.size() >= limit) {
                 break;
@@ -46,10 +48,11 @@ public abstract class DanawaBaseCrawler {
                         break;
                     }
                 }
+                currentCount++;
                 // 외부 사이트 전환이 아닌 다나와 사이트의 상품 상세페이지인지 확인
                 String currentUrl = driver.getCurrentUrl();
                 if (currentUrl.startsWith("https://prod.danawa.com/info/")) {
-                    log.info("유효한 상품 URL 수집 완료 ({}/{})", validUrls.size(), limit);
+                    log.info("유효한 상품 URL 수집 완료 ({}/{}) : {}", currentCount, limit, currentUrl);
                     validUrls.add(currentUrl);
                 } else {
                     log.info("{}번째 상품은 외부 쇼핑몰로 연결되었습니다.", i);

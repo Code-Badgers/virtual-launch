@@ -40,7 +40,7 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
 
         try {
             // 하나의 경쟁사 제품을 대상으로 수집을 진행하니 1개의 유효한 상품만 찾기
-            List<String> productUrls = navigateToProductDetail(driver, keyword, 1); // 부모 로직 호출
+            List<String> productUrls = navigateToProductDetail(driver, keyword, limit); // 부모 로직 호출
 
             if (productUrls.isEmpty()) {
                 log.warn("유효한 상품 URL을 찾을 수 없습니다. 키워드: {}", keyword);

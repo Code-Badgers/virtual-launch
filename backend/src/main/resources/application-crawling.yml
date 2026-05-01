@@ -1,0 +1,21 @@
+crawling:
+  danawa:
+
+    review:
+      # 리뷰 리스트
+      review-list-selector: ".rvw_list li"
+      # 본문
+      review-content-selector: ".atc"
+      # 평점
+      grade-filter-class: "grade_select"
+      # 평점 필터
+      star-filter-xpath-template: "//div[contains(@class, 'grade_select')]//a[.//span[contains(@class, 'star_mask') and contains(@style, '%d')]]"
+
+
+    spec:
+      # 모델명
+      model-name-selector: ".top_summary .prod_tit"
+      # 제품 가격
+      price-selector: ".box__price-group"
+      # 제품 상세 스펙 테이블
+      spec-table-selector: ".spec_tbl"
