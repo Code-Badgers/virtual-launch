@@ -56,10 +56,16 @@ public class SimulationTaskExecutor {
                 saveMatchedCompetitor(project, result, i + 1);
 
                 // 리뷰 크롤링 트리거
-                reviewCrawlingService.crawlReviews(result.product().getModelName(), result.product().getCompetitorProductId(), limit);
+                reviewCrawlingService.crawlReviews(result.product().getModelName(), result.product().getCompetitorProductId(), limit)
+                        .thenRun(() -> { // 리뷰 크롤링이 완료된 후 실행되는 콜백
+                            // 리뷰 분석 트리거 (크롤링된 경쟁사 제품 리뷰에 대한 AI 분석)
+                            reviewAnalysisService.analyzeAndSaveReviews(result.product().getCompetitorProductId());
+                        })
+                        .exceptionally(ex -> {
+                            log.error("리뷰 크롤링 중 에러 발생: {}", ex.getMessage());
+                            return null;
 
-                // 리뷰 분석 트리거 (크롤링된 경쟁사 제품 리뷰에 대한 AI 분석)
-                reviewAnalysisService.analyzeAndSaveReviews(result.product().getCompetitorProductId());
+                        });
             }
             project.updateStatus(SimulationStatus.COMPLETED);
             log.info("시뮬레이션 분석이 성공적으로 완료되었습니다. 프로젝트 ID: {}", projectId);

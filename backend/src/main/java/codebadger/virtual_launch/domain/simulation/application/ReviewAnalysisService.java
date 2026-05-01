@@ -29,15 +29,21 @@ public class ReviewAnalysisService {
             backoff = @Backoff(delay = 1500) // 1.5초 후 재시도
     )
     public void analyzeAndSaveReviews(Long competitorProductId) {
-
         List<RawReview> rawReviews = rawReviewRepository.findByCompetitorProduct_CompetitorProductId(competitorProductId);
+        // 리뷰 개수 확인
+        long reviewCount = rawReviewRepository.countByCompetitorProduct_CompetitorProductId(competitorProductId);
 
         // 텍스트 가공
         String formattedReviews = rawReviews.stream()
                 .map(review -> String.format("(별점: %d) %s", review.getStarRating(), review.getOriginalContent()))
                 .collect(Collectors.joining("\n"));
 
-        // AI 프롬프트 생성
+        if (reviewCount == 0) { // 리뷰가 없는 경우 AI 분석 로직을 건너뛰고 로그만 남김
+            log.warn("분석할 리뷰가 없습니다. 경쟁사 제품 ID: {}", competitorProductId);
+            return;
+        }
+
+        // AI 프롬프트 생성 (크롤링한 리뷰가 존재할 경우)
         String prompt = promptGenerator.generate(formattedReviews);
 
         ReviewAnalysisAiResponse response = geminiApiClient.generateText(prompt, ReviewAnalysisAiResponse.class);
