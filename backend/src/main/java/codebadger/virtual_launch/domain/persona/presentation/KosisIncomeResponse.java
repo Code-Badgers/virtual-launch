@@ -1,11 +1,13 @@
 package codebadger.virtual_launch.domain.persona.presentation;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class KosisIncomeResponse {
 
     @JsonProperty("DT")
@@ -17,8 +19,8 @@ public class KosisIncomeResponse {
     @JsonProperty("UNIT_NM")
     private String unit;           // 단위 (예: "천원")
 
-    @JsonProperty("NM")
-    private String categoryName;   // 분류 명칭 (예: "정보통신업" 또는 "전체근로자")
+    @JsonProperty("C1_NM")
+    private String categoryName;  // 분류 명칭 (예: "정보통신업" 또는 "전체근로자")
 
     /**
      * "월급여액" 항목인지 확인하는 유틸리티 메서드
