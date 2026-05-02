@@ -14,12 +14,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class KosisApiClientTest {
 
-    // 1. 테스트 환경에서 사용할 ObjectMapper를 직접 정의합니다.
     @TestConfiguration
     static class TestConfig {
         @Bean
         public ObjectMapper objectMapper() {
-            return new ObjectMapper();
+            // 미정의 필드 무시 설정을 빈 레벨에서 해주면 DTO의 @JsonIgnoreProperties가 없어도 안전합니다.
+            return new ObjectMapper()
+                    .configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         }
     }
 
@@ -37,9 +38,26 @@ class KosisApiClientTest {
 
         // then
         Long salary = monthlySalaryByAge.block();
+        assertNotNull(salary);
+        assertTrue(salary > 0);
+        System.out.println("✅ [연령별] 최종 결과 금액: " + salary + "원");
+    }
+
+    @Test
+    @DisplayName("정보통신업의 월평균 급여 데이터를 KOSIS에서 정상적으로 가져온다")
+    void testGetMonthlySalaryByIndustry() {
+        // given
+        // 개발자 직군이 포함된 '정보통신업'으로 테스트해봅니다.
+        IndustryCode industryCode = IndustryCode.INFO_COMMUNICATION;
+
+        // when
+        Mono<Long> monthlySalaryByIndustry = kosisApiClient.getMonthlySalaryByIndustry(industryCode);
+
+        // then
+        Long salary = monthlySalaryByIndustry.block();
 
         System.out.println("========================================");
-        System.out.println("✅ 최종 결과 금액: " + salary + "원");
+        System.out.println("✅ [" + industryCode.getDescription() + "] 최종 결과 금액: " + salary + "원");
         System.out.println("========================================");
 
         assertNotNull(salary);
