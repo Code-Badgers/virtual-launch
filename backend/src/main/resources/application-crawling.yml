@@ -9,7 +9,7 @@ crawling:
       # 평점
       grade-filter-class: "grade_select"
       # 평점 필터
-      star-filter-xpath-template: "//div[contains(@class, 'grade_select')]//a[.//span[contains(@class, 'star_mask') and contains(@style, '%d')]]"
+      star-filter-xpath: "//div[contains(@class, 'grade_select')]//a[.//span[contains(@class, 'star_mask') and contains(@style, '%d')]]"
 
 
     spec:

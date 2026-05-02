@@ -4,6 +4,8 @@ import codebadger.virtual_launch.common.exception.BusinessException;
 import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.crawling.domain.SpecCrawler;
 import codebadger.virtual_launch.domain.crawling.domain.SpecCrawlingResultDto;
+import codebadger.virtual_launch.domain.crawling.infrastructure.config.CrawlingProperties;
+import codebadger.virtual_launch.domain.crawling.infrastructure.config.CrawlingProperties.SpecConfig;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -28,9 +30,11 @@ import org.springframework.stereotype.Component;
 public class DanawaSpecCrawler extends DanawaBaseCrawler  implements SpecCrawler {
 
     private final WebDriverFactory webDriverFactory;
+    private final SpecConfig specConfig;
 
-    public DanawaSpecCrawler(WebDriverFactory webDriverFactory) {
+    public DanawaSpecCrawler(WebDriverFactory webDriverFactory, CrawlingProperties crawlingProperties) {
         this.webDriverFactory = webDriverFactory;
+        this.specConfig = crawlingProperties.getDanawaConfig().getSpec();
     }
 
     @Override
@@ -76,12 +80,14 @@ public class DanawaSpecCrawler extends DanawaBaseCrawler  implements SpecCrawler
 
     // 제품명 추출
     private String extractModelName(WebDriver driver) {
-        return driver.findElement(By.cssSelector(".top_summary .prod_tit")).getText().trim();
+        String modelNameSelector = specConfig.getModelNameSelector();
+        return driver.findElement(By.cssSelector(modelNameSelector)).getText().trim();
     }
 
     // 현재 가격 (최저가 기준) 추출
     private BigDecimal extractCurrentPrice(WebDriver driver) {
-        String priceText = driver.findElement(By.className("box__price-group")).getText();
+        String priceSelector = specConfig.getPriceSelector();
+        String priceText = driver.findElement(By.className(priceSelector)).getText();
         // 숫자만 남기고 제거
         String numberOnly = priceText.replaceAll("[^0-9]", "");
         return numberOnly.isEmpty() ? BigDecimal.ZERO : new BigDecimal(numberOnly);
@@ -113,10 +119,11 @@ public class DanawaSpecCrawler extends DanawaBaseCrawler  implements SpecCrawler
     // 스펙 테이블 추출
     private Map<String, String> extractRawSpecs(WebDriver driver) {
         Map<String, String> rawSpecs = new HashMap<>();
+        String specTableSelector = specConfig.getSpecTableSelector();
 
         try {
             Document doc = Jsoup.parse(driver.getPageSource());
-            Elements specRows = doc.select(".spec_tbl");
+            Elements specRows = doc.select(specTableSelector);
 
             for (Element row : specRows.select("tr")) {
                 String key = row.select("th").text().trim();
