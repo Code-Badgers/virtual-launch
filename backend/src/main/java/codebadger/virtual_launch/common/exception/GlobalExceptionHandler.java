@@ -4,6 +4,7 @@ import codebadger.virtual_launch.common.api.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -82,4 +83,38 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(response, errorCode.getStatus());
     }
+
+    /**
+     * JSON 파싱 및 Enum 변환 실패 처리
+     * 클라이언트가 Enum에 없는 값을 보냈을 때 발생합니다.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException e, HttpServletRequest request) {
+
+        log.error("[HttpMessageNotReadableException] Message: {}, Path: {}",
+                e.getMessage(), request.getRequestURI());
+
+        String detailMessage = "요청 본문을 읽을 수 없습니다. 형식이 올바른지 확인해주세요.";
+
+        // Enum 변환 실패(InvalidFormatException)인 경우 어떤 필드인지 구체적으로 추출
+        if (e.getCause() instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException prevException) {
+            String fieldName = prevException.getPath().isEmpty() ? "unknown" : prevException.getPath().get(0).getFieldName();
+            detailMessage = String.format("'%s' 필드의 값이 유효하지 않습니다. 허용된 값을 확인해주세요.", fieldName);
+        }
+
+        ErrorCode errorCode = ErrorCode.INVALID_INPUT_VALUE;
+
+        ErrorResponse response = new ErrorResponse(
+                errorCode.name(),               // title (예: INVALID_INPUT_VALUE)
+                errorCode.getStatus().value(),  // status (예: 400)
+                detailMessage,                  // detail (우리가 가공한 메시지)
+                request.getRequestURI(),        // instance (요청 경로)
+                LocalDateTime.now()             // timestamp
+        );
+
+        return new ResponseEntity<>(response, errorCode.getStatus());
+    }
+
+
 }
