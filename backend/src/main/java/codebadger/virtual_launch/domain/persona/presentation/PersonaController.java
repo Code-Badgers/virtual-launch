@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,8 +17,11 @@ public class PersonaController {
     private final PersonaService personaService;
 
     @PostMapping
-    public ResponseEntity<SuccessResponse<Long>> createPersona(@Valid @RequestBody PersonaCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.ok(personaService.createPersona(request)));
+    public Mono<ResponseEntity<SuccessResponse<Long>>> createPersona(@Valid @RequestBody PersonaCreateRequest request) {
+        return personaService.createPersona(request)
+                .map(personaId -> ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(SuccessResponse.ok(personaId)));
     }
 
 }

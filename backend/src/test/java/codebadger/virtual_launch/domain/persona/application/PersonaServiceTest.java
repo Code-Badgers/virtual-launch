@@ -3,6 +3,9 @@ package codebadger.virtual_launch.domain.persona.application;
 import codebadger.virtual_launch.domain.persona.domain.entity.PersonaMaster;
 import codebadger.virtual_launch.domain.persona.domain.entity.PurchaseCriteria;
 import codebadger.virtual_launch.domain.persona.domain.repository.PersonaMasterRepository;
+import codebadger.virtual_launch.domain.persona.infrastructure.AgeRange;
+import codebadger.virtual_launch.domain.persona.infrastructure.IndustryCode;
+import codebadger.virtual_launch.domain.persona.infrastructure.KosisApiClient;
 import codebadger.virtual_launch.domain.persona.presentation.PersonaCreateRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,8 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -24,48 +28,52 @@ class PersonaServiceTest {
     @Mock
     private PersonaMasterRepository personaMasterRepository;
 
+    @Mock
+    private KosisApiClient kosisApiClient; // 새로운 의존성 모킹
+
     @InjectMocks
     private PersonaService personaService;
 
     @Test
-    @DisplayName("사용자 입력 데이터를 바탕으로 페르소나가 성공적으로 생성되고 저장된다.")
+    @DisplayName("KOSIS 데이터를 기반으로 급여를 산출하여 페르소나가 성공적으로 저장된다.")
     void shouldPersonaCreateSuccessfully() {
-        // [Given] 테스트 환경 준비
+        // [Given]
         PersonaCreateRequest request = new PersonaCreateRequest(
-                "20대",
+                AgeRange.UNDER_29,              // Enum 타입 적용
                 "남성",
-                "소프트웨어 엔지니어",
+                IndustryCode.INFO_COMMUNICATION, // Enum 타입 적용
                 "4,000만원 이상",
-                PurchaseCriteria.COST_EFFECTIVE, // 미리 정의된 Enum 값
+                PurchaseCriteria.COST_EFFECTIVE,
                 "분석적이고 신중한 성격",
                 "자기계발을 즐기는 라이프스타일"
         );
 
-        // 가짜 엔티티 생성 (DB 저장 후 ID가 할당된 상황을 모사)
+        // KOSIS API 응답 모킹 (테스트의 일관성을 위해 고정값 반환)
+        given(kosisApiClient.getMonthlySalaryByAge(any())).willReturn(Mono.just(3000000L));
+        given(kosisApiClient.getMonthlySalaryByIndustry(any())).willReturn(Mono.just(5000000L));
+
+        // 가중치 산출 예상 소득: (300만 * 0.7) + (500만 * 0.3) = 360만원
+        String expectedIncome = "3600000";
+
         PersonaMaster savedPersona = PersonaMaster.create(
-                request.ageGroup(),
+                request.ageRange(),
                 request.gender(),
-                request.occupation(),
-                request.incomeLevel(),
+                request.industryCode(),
+                expectedIncome,
                 request.purchaseCriteria(),
                 "조립된 시스템 프롬프트"
         );
 
-        // 엔티티의 ID는 보통 DB에서 생성되므로, Reflection을 이용해 강제로 ID를 주입합니다.
         Long expectedId = 1L;
         ReflectionTestUtils.setField(savedPersona, "personaId", expectedId);
-
-        // 레포지토리의 save 메서드가 호출되면 위에서 만든 savedPersona를 반환하도록 설정
         given(personaMasterRepository.save(any(PersonaMaster.class))).willReturn(savedPersona);
 
-        // [When] 실제 서비스 로직 실행
-        Long resultId = personaService.createPersona(request);
+        // [When & Then] StepVerifier를 사용한 리액티브 스트림 검증
+        StepVerifier.create(personaService.createPersona(request))
+                .expectNext(expectedId) // 예상되는 저장된 ID 확인
+                .verifyComplete();     // 스트림이 정상 종료되는지 확인
 
-        // [Then] 결과 검증
-        assertThat(resultId).isNotNull();
-        assertThat(resultId).isEqualTo(expectedId);
-
-        // 실제로 save 메서드가 한 번 이상 호출되었는지 확인
+        // 레포지토리 저장 호출 여부 검증
         verify(personaMasterRepository, atLeastOnce()).save(any(PersonaMaster.class));
     }
 }
