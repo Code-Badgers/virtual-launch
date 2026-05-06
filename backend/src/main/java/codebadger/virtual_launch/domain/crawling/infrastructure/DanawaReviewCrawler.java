@@ -32,7 +32,7 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
 
     public DanawaReviewCrawler(WebDriverFactory webDriverFactory, CrawlingProperties crawlingProperties) {
         this.webDriverFactory = webDriverFactory;
-        this.reviewConfig = crawlingProperties.getDanawaConfig().getReview();
+        this.reviewConfig = crawlingProperties.getDanawa().getReview();
     }
 
     @Override
@@ -52,6 +52,26 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
             }
 
             driver.get(productUrls.get(0)); // 타겟 페이지로 이동
+
+            try { // 단종된 상품일 경우 크롤링 패스
+                // 해당 검사만 빠르게 수행하기 위해 3초의 짧은 대기 시간으로 별도 WebDriverWait 인스턴스 생성
+                WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(5));
+
+                boolean isDiscontinued = !driver.findElements(
+                        By.xpath("//*[contains(text(), '가격비교 서비스가 종료') or contains(text(), '단종')]")
+                ).isEmpty();
+
+                if(isDiscontinued) {
+                    log.info("단종된 상품입니다. 크롤링을 종료합니다. URL: {}", driver.getCurrentUrl());
+                    return ReviewsCrawlingResultDto.builder()
+                            .totalReviewCount(0)
+                            .reviews(new ArrayList<>())
+                            .build();
+                }
+            } catch (Exception e) {
+                log.debug("단종 상품 검사 패스, 정상 크롤링 진입");
+            }
+
             // 스크롤 및 섹션 활성화
             scrollToReviewSection(driver, wait, js);
 

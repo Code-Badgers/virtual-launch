@@ -32,7 +32,10 @@ public enum ErrorCode {
     INVALID_WEIGHT_SUM(HttpStatus.BAD_REQUEST, "S003", "가중치의 합은 1.0이어야 합니다."),
 
     // 경쟁사 제품
-    COMPETITOR_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "S004", "존재하지 않는 경쟁사 제품입니다.");
+    COMPETITOR_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "S004", "존재하지 않는 경쟁사 제품입니다."),
+
+    // 시뮬레이션
+    SIMULATION_NOT_FOUND(HttpStatus.NOT_FOUND, "S005", "존재하지 않는 시뮬레이션 프로젝트입니다.");
 
     private final HttpStatus status;
     private final String code; // 필요 시 title 외에 별도 관리용

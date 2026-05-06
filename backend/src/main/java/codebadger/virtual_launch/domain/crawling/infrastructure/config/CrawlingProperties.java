@@ -13,7 +13,7 @@ import org.springframework.context.annotation.PropertySource;
 @Getter @Setter
 public class CrawlingProperties {
 
-    private DanawaConfig danawaConfig = new DanawaConfig();
+    private DanawaConfig danawa = new DanawaConfig();
 
     @Getter @Setter
     public static class DanawaConfig {

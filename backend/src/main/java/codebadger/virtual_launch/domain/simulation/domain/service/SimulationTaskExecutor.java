@@ -1,5 +1,7 @@
 package codebadger.virtual_launch.domain.simulation.domain.service;
 
+import codebadger.virtual_launch.common.exception.BusinessException;
+import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.crawling.application.CompetitorCrawlingService;
 import codebadger.virtual_launch.domain.crawling.application.ReviewCrawlingService;
 import codebadger.virtual_launch.domain.simulation.application.ReviewAnalysisService;
@@ -9,6 +11,7 @@ import codebadger.virtual_launch.domain.simulation.domain.entity.SimulationProje
 import codebadger.virtual_launch.domain.simulation.domain.entity.SimulationStatus;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
 import codebadger.virtual_launch.domain.simulation.domain.repository.MatchedCompetitorRepository;
+import codebadger.virtual_launch.domain.simulation.domain.repository.ProductSpecRepository;
 import codebadger.virtual_launch.domain.simulation.domain.repository.SimulationProjectRepository;
 import codebadger.virtual_launch.domain.simulation.presentation.dto.MatchResultDto;
 import java.util.List;
@@ -16,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Slf4j
@@ -30,14 +32,20 @@ public class SimulationTaskExecutor {
     private final CompetitorCrawlingService competitorCrawlingService;
     private final CompetitorProductRepository competitorProductRepository;
     private final ReviewAnalysisService reviewAnalysisService;
+    private final ProductSpecRepository productSpecRepository;
 
     @Async
-    @Transactional
-    public void runAsyncAnalysis(Long projectId, ProductSpec productSpec, int limit) {
+    public void runAsyncAnalysis(Long projectId, Long productId, int limit) {
         log.info("시뮬레이션 분석이 시작되었습니다. 프로젝트 ID: {}", projectId);
-        SimulationProject project = simulationProjectRepository.findById(projectId).orElseThrow();
+        SimulationProject project = null;
 
         try {
+            project = simulationProjectRepository.findById(projectId).
+                    orElseThrow(() -> new BusinessException(ErrorCode.SIMULATION_NOT_FOUND));
+
+            ProductSpec productSpec = productSpecRepository.findByIdWithCategory(productId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
             // 사용자 런칭 제품에 대한 동일 카테고리 경쟁사 제품이 존재하는지 확인
             boolean existsCompetitors = competitorProductRepository.existsByCategory(productSpec.getCategory());
 
@@ -70,7 +78,10 @@ public class SimulationTaskExecutor {
             project.updateStatus(SimulationStatus.COMPLETED);
             log.info("시뮬레이션 분석이 성공적으로 완료되었습니다. 프로젝트 ID: {}", projectId);
         } catch (Exception e) {
-            project.updateStatus(SimulationStatus.FAILED);
+            if (project != null) { // 크롤링 중 에러가 발생했을 경우
+                project.updateStatus(SimulationStatus.FAILED);
+                simulationProjectRepository.save(project);
+            }
             log.error("시뮬레이션 분석 중 오류 발생 : {}", e.getMessage());
         }
 

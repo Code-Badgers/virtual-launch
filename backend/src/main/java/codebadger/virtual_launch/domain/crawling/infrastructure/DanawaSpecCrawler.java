@@ -34,7 +34,7 @@ public class DanawaSpecCrawler extends DanawaBaseCrawler  implements SpecCrawler
 
     public DanawaSpecCrawler(WebDriverFactory webDriverFactory, CrawlingProperties crawlingProperties) {
         this.webDriverFactory = webDriverFactory;
-        this.specConfig = crawlingProperties.getDanawaConfig().getSpec();
+        this.specConfig = crawlingProperties.getDanawa().getSpec();
     }
 
     @Override
@@ -47,26 +47,46 @@ public class DanawaSpecCrawler extends DanawaBaseCrawler  implements SpecCrawler
         try {
             List<SpecCrawlingResultDto> resultList = new ArrayList<>();
 
-            List<String> productUrls =  navigateToProductDetail(driver, keyword, limit); // 부모 로직 호출
+            List<String> productUrls =  navigateToProductDetail(driver, keyword, limit * 2); // 부모 로직 호출 (크롤링 실패를 대비해 *2 진행)
             
             for(String url : productUrls) {
-                driver.get(url); // 타겟 페이지로 이동
+                if (resultList.size() >= limit) { // 크롤링 갯수를 충족하면 루프 종료
+                    break;
+                }
 
-                String modelName = extractModelName(driver); // 제품명
-                BigDecimal currentPrice = extractCurrentPrice(driver); // 현재 가격 (최저가 기준)
+                try { // 단종된 상품일 경우 크롤링 패스
+                    driver.get(url); // 타겟 페이지로 이동
 
-                // 스크롤 및 섹션 활성화
-                scrollToSpecSection(driver, wait, js);
+                    boolean isDiscontinued = !driver.findElements(
+                            By.xpath("//*[contains(text(), '가격비교 서비스가 종료') or contains(text(), '단종')]")
+                    ).isEmpty();
 
-                Map<String, String> rawSpecs = extractRawSpecs(driver); // 제품 스펙 테이블
+                    if(isDiscontinued) {
+                        log.info("단종된 상품입니다. 해당 제품에 대한 크롤링을 건너뜁니다. URL: {}", driver.getCurrentUrl());
+                        continue;
+                    }
 
-                SpecCrawlingResultDto resultDto =  SpecCrawlingResultDto.builder()
-                        .modelName(modelName)
-                        .currentPrice(currentPrice)
-                        .rawSpecs(rawSpecs)
-                        .build();
+                    // 크롤링이 정상적으로 이루어지는 상품일 경우
+                    String modelName = extractModelName(driver); // 제품명
+                    BigDecimal currentPrice = extractCurrentPrice(driver); // 현재 가격 (최저가 기준)
 
-                resultList.add(resultDto);
+                    // 스크롤 및 섹션 활성화
+                    scrollToSpecSection(driver, wait, js);
+
+                    Map<String, String> rawSpecs = extractRawSpecs(driver); // 제품 스펙 테이블
+
+                    SpecCrawlingResultDto resultDto =  SpecCrawlingResultDto.builder()
+                            .modelName(modelName)
+                            .currentPrice(currentPrice)
+                            .rawSpecs(rawSpecs)
+                            .build();
+
+                    resultList.add(resultDto);
+                    log.info("경쟁사 제품 정상 크롤링 완료 (현재 {}/{} 개)", resultList.size(), limit);
+                } catch (Exception e) {
+                    log.warn("상품 파싱 중 오류 발생. 다음 상품으로 건너뜁니다. URL: {}, 사유: {}", url, e.getMessage());
+                    continue;
+                }
             }
             return resultList;
 
@@ -87,7 +107,7 @@ public class DanawaSpecCrawler extends DanawaBaseCrawler  implements SpecCrawler
     // 현재 가격 (최저가 기준) 추출
     private BigDecimal extractCurrentPrice(WebDriver driver) {
         String priceSelector = specConfig.getPriceSelector();
-        String priceText = driver.findElement(By.className(priceSelector)).getText();
+        String priceText = driver.findElement(By.cssSelector(priceSelector)).getText();
         // 숫자만 남기고 제거
         String numberOnly = priceText.replaceAll("[^0-9]", "");
         return numberOnly.isEmpty() ? BigDecimal.ZERO : new BigDecimal(numberOnly);

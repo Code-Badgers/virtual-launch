@@ -1,7 +1,11 @@
 package codebadger.virtual_launch.domain.simulation.application;
 
+import codebadger.virtual_launch.common.exception.BusinessException;
+import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.crawling.domain.entity.RawReview;
 import codebadger.virtual_launch.domain.crawling.domain.repository.RawReviewRepository;
+import codebadger.virtual_launch.domain.simulation.domain.entity.CompetitorProduct;
+import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
 import codebadger.virtual_launch.domain.simulation.domain.service.ReviewAnalysisPromptGenerator;
 import codebadger.virtual_launch.domain.simulation.infrastructure.ai.GeminiApiClient;
 import codebadger.virtual_launch.domain.simulation.infrastructure.ai.dto.ReviewAnalysisAiResponse;
@@ -20,6 +24,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 public class ReviewAnalysisService {
 
     private final RawReviewRepository rawReviewRepository;
+    private final CompetitorProductRepository competitorProductRepository;
     private final GeminiApiClient geminiApiClient;
     private final ReviewAnalysisPromptGenerator promptGenerator;
 
@@ -29,6 +34,9 @@ public class ReviewAnalysisService {
             backoff = @Backoff(delay = 1500) // 1.5초 후 재시도
     )
     public void analyzeAndSaveReviews(Long competitorProductId) {
+        CompetitorProduct product = competitorProductRepository.findById(competitorProductId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
         List<RawReview> rawReviews = rawReviewRepository.findByCompetitorProduct_CompetitorProductId(competitorProductId);
         // 리뷰 개수 확인
         long reviewCount = rawReviewRepository.countByCompetitorProduct_CompetitorProductId(competitorProductId);
@@ -39,7 +47,7 @@ public class ReviewAnalysisService {
                 .collect(Collectors.joining("\n"));
 
         if (reviewCount == 0) { // 리뷰가 없는 경우 AI 분석 로직을 건너뛰고 로그만 남김
-            log.warn("분석할 리뷰가 없습니다. 경쟁사 제품 ID: {}", competitorProductId);
+            log.warn("분석할 리뷰가 없습니다.\n 경쟁사 제품 ID: {}\n 경쟁사 제품 url: {}\n", competitorProductId, product.getCompetitorProductUrl());
             return;
         }
 
