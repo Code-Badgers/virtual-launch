@@ -2,6 +2,7 @@ package codebadger.virtual_launch.domain.simulation.domain.service;
 
 import codebadger.virtual_launch.domain.crawling.application.CompetitorCrawlingService;
 import codebadger.virtual_launch.domain.crawling.application.ReviewCrawlingService;
+import codebadger.virtual_launch.domain.simulation.application.ReviewAnalysisService;
 import codebadger.virtual_launch.domain.simulation.domain.entity.MatchedCompetitor;
 import codebadger.virtual_launch.domain.simulation.domain.entity.ProductSpec;
 import codebadger.virtual_launch.domain.simulation.domain.entity.SimulationProject;
@@ -28,7 +29,7 @@ public class SimulationTaskExecutor {
     private final SimulationProjectRepository simulationProjectRepository;
     private final CompetitorCrawlingService competitorCrawlingService;
     private final CompetitorProductRepository competitorProductRepository;
-
+    private final ReviewAnalysisService reviewAnalysisService;
 
     @Async
     @Transactional
@@ -56,6 +57,9 @@ public class SimulationTaskExecutor {
 
                 // 리뷰 크롤링 트리거
                 reviewCrawlingService.crawlReviews(result.product().getModelName(), result.product().getCompetitorProductId(), limit);
+
+                // 리뷰 분석 트리거 (크롤링된 경쟁사 제품 리뷰에 대한 AI 분석)
+                reviewAnalysisService.analyzeAndSaveReviews(result.product().getCompetitorProductId());
             }
             project.updateStatus(SimulationStatus.COMPLETED);
             log.info("시뮬레이션 분석이 성공적으로 완료되었습니다. 프로젝트 ID: {}", projectId);

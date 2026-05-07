@@ -110,6 +110,9 @@ dependencies {
 
 	// Reactor 테스트를 위한 라이브러리
 	testImplementation 'io.projectreactor:reactor-test'
+
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework:spring-aspects'
 }
 
 dependencyManagement {
