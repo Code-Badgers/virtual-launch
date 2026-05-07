@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.validator.constraints.Range;
 
 @Getter
 @Setter
@@ -43,6 +44,8 @@ public class RawReview { // 실제 리뷰 - 개별
     private String originalContent; // 원본 리뷰 내용
     private int starRating; // 별점 (1~5)
 
+    @Column
+    @Range(min = 0, max = 10)
     private double sentiment; // 긍정, 부정 스코어 점수 (0.0 ~ 10.0)
 
     @Column(columnDefinition = "TEXT")

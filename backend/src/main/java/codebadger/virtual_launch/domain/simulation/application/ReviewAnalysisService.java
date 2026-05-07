@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Slf4j
@@ -33,6 +34,8 @@ public class ReviewAnalysisService {
             maxAttempts = 3, // 최대 3회 재시도
             backoff = @Backoff(delay = 1500) // 1.5초 후 재시도
     )
+
+    @Transactional
     public void analyzeAndSaveReviews(Long competitorProductId) {
         CompetitorProduct product = competitorProductRepository.findById(competitorProductId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -56,14 +59,18 @@ public class ReviewAnalysisService {
 
         ReviewAnalysisAiResponse response = geminiApiClient.generateText(prompt, ReviewAnalysisAiResponse.class);
 
-        log.info("AI 리뷰 분석 결과 - 부/긍정 점수: {}\n, 리뷰 태그: {}\n, 긍정 포인트: {}\n, 불편 포인트: {}\n",
-                response.sentimentScore(), response.reviewTags(), response.positivePoints(), response.painPoints());
+        log.info("AI 리뷰 분석 결과 - 제품명: {}\n, 카테고리: {}\n, 부/긍정 점수: {}\n, 리뷰 태그: {}\n, 긍정 포인트: {}\n, 불편 포인트: {}\n",
+                product.getModelName(), product.getCategory(), response.sentimentScore(), response.reviewTags(), response.positivePoints(), response.painPoints());
 
         // AI 분석 결과 RawReview 엔터티에 업데이트
         for (RawReview review : rawReviews) {
+            String tags = (response.reviewTags() != null)
+                    ? String.join(", ", response.reviewTags())
+                    : "";
+
             review.updateAnalysisResult(
                     response.sentimentScore(),
-                    String.join(", ", response.reviewTags()), //List<String>를 String으로 변환하여 저장
+                    tags,
                     response.positivePoints(),
                     response.painPoints()
             );
