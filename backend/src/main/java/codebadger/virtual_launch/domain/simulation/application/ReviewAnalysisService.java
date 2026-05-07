@@ -62,21 +62,18 @@ public class ReviewAnalysisService {
         log.info("AI 리뷰 분석 결과 - 제품명: {}\n, 카테고리: {}\n, 부/긍정 점수: {}\n, 리뷰 태그: {}\n, 긍정 포인트: {}\n, 불편 포인트: {}\n",
                 product.getModelName(), product.getCategory(), response.sentimentScore(), response.reviewTags(), response.positivePoints(), response.painPoints());
 
-        // AI 분석 결과 RawReview 엔터티에 업데이트
-        for (RawReview review : rawReviews) {
-            String tags = (response.reviewTags() != null)
-                    ? String.join(", ", response.reviewTags())
-                    : "";
+        String tags = (response.reviewTags() != null)
+                ? String.join(", ", response.reviewTags())
+                : "";
 
-            review.updateAnalysisResult(
-                    response.sentimentScore(),
-                    tags,
-                    response.positivePoints(),
-                    response.painPoints()
-            );
-        }
+        product.updateAnalysisResult(
+                response.sentimentScore(),
+                tags,
+                response.positivePoints(),
+                response.painPoints()
+        );
 
-        rawReviewRepository.saveAll(rawReviews);
+        competitorProductRepository.save(product);
     }
 
 }
