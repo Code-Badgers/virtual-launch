@@ -53,7 +53,7 @@ public class SimulationService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                simulationTaskExecutor.runAsyncAnalysis(projectId, productSpec, dto.competitorCount());
+                simulationTaskExecutor.runAsyncAnalysis(projectId, dto.productId(), dto.competitorCount());
             }
         });
 

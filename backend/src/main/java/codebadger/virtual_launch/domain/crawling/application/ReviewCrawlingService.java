@@ -9,12 +9,11 @@ import codebadger.virtual_launch.domain.crawling.infrastructure.DanawaReviewCraw
 import codebadger.virtual_launch.domain.simulation.domain.entity.CompetitorProduct;
 import codebadger.virtual_launch.domain.simulation.domain.repository.CompetitorProductRepository;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.internal.util.stereotypes.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -27,7 +26,7 @@ public class ReviewCrawlingService {
     private final ReviewSaver reviewSaver;
 
     @Async
-    public void crawlReviews(String keyword, Long competitorProductId, Integer limit) {
+    public CompletableFuture<Void> crawlReviews(String keyword, Long competitorProductId, Integer limit) {
         // 크롤링할 리뷰 갯수 미입력 시 기본값 5
         int targetLimit = (limit != null) ? limit : 5;
 
@@ -41,8 +40,12 @@ public class ReviewCrawlingService {
 
             if(reviews == null || reviews.isEmpty()){
                 log.warn("크롤링된 리뷰가 없습니다. 키워드: {}", keyword);
-                return;
+                return CompletableFuture.completedFuture(null);
             }
+
+            log.info("리뷰 크롤링이 완료되었습니다. 크롤링된 리뷰 원본: {}", reviews.stream()
+                    .map(RawReview::getOriginalContent)
+                    .toList());
 
             reviewSaver.saveReviews(reviews, competitorProduct);
 
@@ -50,5 +53,7 @@ public class ReviewCrawlingService {
             log.error("리뷰 크롤링 중 오류 발생: {}", e.getMessage());
             throw new RuntimeException("리뷰 크롤링 비동기 트랜잭션 롤백 처리", e);
         }
+        // 리뷰 크롤링이 완료되었음을 알림
+        return CompletableFuture.completedFuture(null);
     }
 }

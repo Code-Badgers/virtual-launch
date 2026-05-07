@@ -26,6 +26,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.validator.constraints.Range;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -83,4 +84,25 @@ public class CompetitorProduct extends BaseTimeEntity { // 경쟁사 제품
 
     @Schema(description = "마지막 크롤링 시점")
     private OffsetDateTime lastCrawledAt;
+
+    @Column
+    @Range(min = 0, max = 10)
+    private double sentiment; // 긍정, 부정 스코어 점수 (0.0 ~ 10.0)
+
+    @Column(columnDefinition = "TEXT")
+    private String reviewTags; // 리뷰에서 추출된 키워드 (콤마로 구분)
+
+    @Column(columnDefinition = "TEXT")
+    private String positivePoints; // 핵심 만족 사항
+
+    @Column(columnDefinition = "TEXT")
+    private String painPoints; // 핵심 불만 사항
+
+    public void updateAnalysisResult(double sentiment, String reviewTags, String positivePoints, String painPoints) {
+        this.sentiment = sentiment;
+        this.reviewTags = reviewTags;
+        this.positivePoints = positivePoints;
+        this.painPoints = painPoints;
+
+    }
 }

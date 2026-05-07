@@ -5,6 +5,8 @@ import codebadger.virtual_launch.common.exception.ErrorCode;
 import codebadger.virtual_launch.domain.crawling.domain.ReviewCrawler;
 import codebadger.virtual_launch.domain.crawling.domain.ReviewsCrawlingResultDto;
 import codebadger.virtual_launch.domain.crawling.domain.entity.RawReview;
+import codebadger.virtual_launch.domain.crawling.infrastructure.config.CrawlingProperties;
+import codebadger.virtual_launch.domain.crawling.infrastructure.config.CrawlingProperties.ReviewConfig;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +28,11 @@ import org.springframework.stereotype.Component;
 public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCrawler {
 
     private final WebDriverFactory webDriverFactory;
+    private final ReviewConfig reviewConfig;
 
-    public DanawaReviewCrawler(WebDriverFactory webDriverFactory) {
+    public DanawaReviewCrawler(WebDriverFactory webDriverFactory, CrawlingProperties crawlingProperties) {
         this.webDriverFactory = webDriverFactory;
+        this.reviewConfig = crawlingProperties.getDanawa().getReview();
     }
 
     @Override
@@ -40,7 +44,7 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
 
         try {
             // 하나의 경쟁사 제품을 대상으로 수집을 진행하니 1개의 유효한 상품만 찾기
-            List<String> productUrls = navigateToProductDetail(driver, keyword, 1); // 부모 로직 호출
+            List<String> productUrls = navigateToProductDetail(driver, keyword, limit); // 부모 로직 호출
 
             if (productUrls.isEmpty()) {
                 log.warn("유효한 상품 URL을 찾을 수 없습니다. 키워드: {}", keyword);
@@ -48,6 +52,26 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
             }
 
             driver.get(productUrls.get(0)); // 타겟 페이지로 이동
+
+            try { // 단종된 상품일 경우 크롤링 패스
+                // 해당 검사만 빠르게 수행하기 위해 3초의 짧은 대기 시간으로 별도 WebDriverWait 인스턴스 생성
+                WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(5));
+
+                boolean isDiscontinued = !driver.findElements(
+                        By.xpath("//*[contains(text(), '가격비교 서비스가 종료') or contains(text(), '단종')]")
+                ).isEmpty();
+
+                if(isDiscontinued) {
+                    log.info("단종된 상품입니다. 크롤링을 종료합니다. URL: {}", driver.getCurrentUrl());
+                    return ReviewsCrawlingResultDto.builder()
+                            .totalReviewCount(0)
+                            .reviews(new ArrayList<>())
+                            .build();
+                }
+            } catch (Exception e) {
+                log.debug("단종 상품 검사 패스, 정상 크롤링 진입");
+            }
+
             // 스크롤 및 섹션 활성화
             scrollToReviewSection(driver, wait, js);
 
@@ -127,12 +151,17 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
     private List<RawReview> collectReviewsByStar(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) {
         List<RawReview> localReviewList = new ArrayList<>();
 
+        String gradeFilterClass = reviewConfig.getGradeFilterClass();
+        String starFilterXpath = reviewConfig.getStarFilterXpath();
+        String reviewListSelector = reviewConfig.getReviewListSelector();
+        String reviewContentSelector = reviewConfig.getReviewContentSelector();
+
         // 별점별 리뷰 1개씩 수집
         for (int star = 5; star >= 1; star--) {
             try {
                 int targetWidth = star * 20;
 
-                By dropDownLocator = By.className("grade_select");
+                By dropDownLocator = By.className(gradeFilterClass);
                 List<WebElement> dropDownList = driver.findElements(dropDownLocator);
                 if(dropDownList.isEmpty()) {
                     log.info("별점 필터를 찾을 수 없습니다.");
@@ -144,14 +173,14 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
                 js.executeScript("arguments[0].click();", dropDown);
 
                 // XPath를 이용한 별점 버튼 타겟팅
-                String xpath = String.format("//div[contains(@class, 'grade_select')]//a[.//span[contains(@class, 'star_mask') and contains(@style, '%d')]]", targetWidth);
+                String xpath = String.format(starFilterXpath, targetWidth);
                 By starFilterLocator = By.xpath(xpath);
 
                 // 해당 버튼 요소가 리스트로 존재하는지 확인
                 WebElement starFilterBtn = wait.until(ExpectedConditions.presenceOfElementLocated(starFilterLocator));
 
                 WebElement oldReviewItem = null;
-                List<WebElement> existingReviews = driver.findElements(By.cssSelector(".rvw_list li"));
+                List<WebElement> existingReviews = driver.findElements(By.cssSelector(reviewListSelector));
                 if (!existingReviews.isEmpty()) { // 리뷰가 존재할 경우
                     oldReviewItem = existingReviews.get(0);
                 }
@@ -164,19 +193,19 @@ public class DanawaReviewCrawler extends DanawaBaseCrawler  implements ReviewCra
                     wait.until(ExpectedConditions.stalenessOf(oldReviewItem));
                 }
                 // 새로운 리뷰 리스트가 DOM에 나타날 때까지 대기
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".rvw_list li")));
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(reviewListSelector)));
 
                 // 리뷰가 새로 로드된 후 페이지 소스를 다시 파싱
                 Document doc = Jsoup.parse(driver.getPageSource());
 
                 // .rvw_list 안의 첫 번째 li 추출 (해당 별점에 대한 첫 번째 리뷰 추출)
-                Elements items = doc.select(".rvw_list li");
+                Elements items = doc.select(reviewListSelector);
 
                 if (!items.isEmpty()) {
                     Element firstItem = items.first();
 
                     // 리뷰 본문 텍스트 추출
-                    String content = firstItem.select(".atc").text();
+                    String content = firstItem.select(reviewContentSelector).text();
 
                     if (!content.isEmpty()) {
                         localReviewList.add(RawReview.builder()

@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.0.3'
 	id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 group = 'codebadger'
@@ -26,6 +27,40 @@ repositories {
 
 ext {
 	set('springAiVersion', "2.0.0-M2")
+}
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+test {
+    useJUnitPlatform() // JUnit 5 사용
+    finalizedBy 'jacocoTestReport' // 테스트 후에 Jacoco 리포트 생성
+}
+
+jacocoTestReport {
+    dependsOn test // 리포트 생성 전 무조건 테스트 먼저 실행
+
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+
+    // 커버리지 측정에서 제외할 패키지 설정
+    afterEvaluate {
+        classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        '**/dto/**',
+                        '**/repository/**',
+                        "**/exception/**",
+                        '**/config/**',
+                        "**/*Application.class"
+                ])
+            })
+        )
+    }
 }
 
 dependencies {
@@ -75,6 +110,9 @@ dependencies {
 
 	// Reactor 테스트를 위한 라이브러리
 	testImplementation 'io.projectreactor:reactor-test'
+
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework:spring-aspects'
 }
 
 dependencyManagement {
