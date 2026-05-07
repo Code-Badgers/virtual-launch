@@ -28,7 +28,7 @@ public abstract class DanawaBaseCrawler {
         // 화면에 있는 모든 상품을 리스트로 가져오기
         List<WebElement> productLinks = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector(".prod_name a")));
 
-        for (int i = 0; i < limit; i++) {
+        for (int i = 0; i < Math.min(limit, productLinks.size()); i++) {
             // limit를 다 채우면 루프 즉시 종료
             if (validUrls.size() >= limit) {
                 break;
